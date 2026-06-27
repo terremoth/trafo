@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inductor & Transformer Designer</title>
+<style>
+  :root {
+    --bg: #f4f3ef;
+    --surface: #ffffff;
+    --surface2: #f9f8f5;
+    --border: rgba(0,0,0,0.12);
+    --border-strong: rgba(0,0,0,0.22);
+    --text: #1a1a18;
+    --text2: #52514e;
+    --text3: #898781;
+    --accent: #2a78d6;
+    --accent-bg: #e6f1fb;
+    --accent-text: #185fa5;
+    --warn-bg: #faeeda;
+    --warn-text: #854f0b;
+    --danger: #e24b4a;
+    --success: #1baf7a;
+    --amber: #eda100;
+    --radius: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141413;
+      --surface: #1e1e1c;
+      --surface2: #252523;
+      --border: rgba(255,255,255,0.10);
+      --border-strong: rgba(255,255,255,0.20);
+      --text: #f0efe9;
+      --text2: #c3c2b7;
+      --text3: #898781;
+      --accent: #3987e5;
+      --accent-bg: #0c2a4a;
+      --accent-text: #7ab8f5;
+      --warn-bg: #2a1f08;
+      --warn-text: #f5c470;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .app-title { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  .app-title .icon { width: 30px; height: 30px; }
+  .lang-bar { display: flex; gap: 6px; }
+  .lang-btn {
+    padding: 5px 13px; border-radius: 20px; border: 1px solid var(--border-strong);
+    background: transparent; color: var(--text2); font-size: 12px; cursor: pointer; transition: all .15s;
+  }
+  .lang-btn.active { background: var(--accent-bg); color: var(--accent-text); border-color: var(--accent); }
+  .main-tabs {
+    display: flex; gap: 0; background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+  }
+  .main-tab {
+    padding: 12px 22px; border: none; background: transparent; color: var(--text2); font-size: 14px;
+    cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; font-weight: 500;
+  }
+  .main-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .content { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  @media (max-width: 900px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px; margin-bottom: 18px;
+  }
+  .card h3 { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 16px; text-transform: uppercase; letter-spacing: .04em; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 5px; }
+  .field select, .field input[type=number], .field input[type=text] {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius);
+    background: var(--surface2); color: var(--text); font-size: 13px; outline: none;
+  }
+  .field select:focus, .field input:focus { border-color: var(--accent); }
+  .range-row { display: flex; align-items: center; gap: 10px; }
+  .range-row input[type=range] {
+    flex: 1; -webkit-appearance: none; appearance: none; height: 4px; border-radius: 4px;
+    background: var(--border-strong); outline: none; cursor: pointer;
+  }
+  .range-row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent); cursor: pointer; border: 2px solid var(--surface);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .range-val { font-size: 13px; font-weight: 600; min-width: 64px; text-align: right; color: var(--text); }
+  .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); gap: 10px; margin: 14px 0; }
+  .metric-card {
+    background: var(--surface2); border-radius: var(--radius); padding: 12px;
+    border: 1px solid var(--border); text-align: center;
+  }
+  .metric-card .m-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .metric-card .m-value { font-size: 20px; font-weight: 700; color: var(--text); line-height: 1.1; }
+  .metric-card .m-unit { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .metric-card.highlight { background: var(--accent-bg); border-color: var(--accent); }
+  .metric-card.highlight .m-value { color: var(--accent-text); }
+  .delta-box {
+    background: var(--accent-bg); border: 1px solid var(--accent); border-left: 3px solid var(--accent);
+    border-radius: var(--radius); padding: 10px 14px; margin: 10px 0; font-size: 12px; color: var(--accent-text);
+    line-height: 1.7;
+  }
+  .delta-box.warn { background: var(--warn-bg); border-color: var(--amber); border-left-color: var(--amber); color: var(--warn-text); }
+  .delta-box.danger { background: #fcebeb; border-color: var(--danger); border-left-color: var(--danger); color: #a32d2d; }
+  .canvas-wrap {
+    border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    background: var(--surface); margin-bottom: 8px;
+  }
+  canvas { display: block; width: 100% !important; }
+  .canvas-label { font-size: 11px; color: var(--text3); text-align: center; margin-bottom: 14px; }
+  .section-title {
+    font-size: 15px; font-weight: 600; color: var(--text); margin: 24px 0 14px;
+    padding-top: 10px; border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .explain-box {
+    background: var(--surface2); border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0; padding: 14px 18px; margin: 12px 0;
+    font-size: 13px; line-height: 1.75; color: var(--text2);
+  }
+  .formula-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+  @media (max-width: 600px) { .formula-grid { grid-template-columns: 1fr; } }
+  .formula-card {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 12px 14px; font-size: 13px;
+  }
+  .formula-card strong { color: var(--accent-text); display: block; margin-bottom: 4px; }
+  .formula-card code {
+    font-family: 'Courier New', monospace; font-size: 13px; color: var(--text);
+    background: var(--bg); padding: 4px 8px; border-radius: 4px; display: block; margin: 6px 0;
+  }
+  .formula-card p { font-size: 12px; color: var(--text3); margin-top: 4px; }
+  .wl-legend { display: flex; gap: 18px; flex-wrap: wrap; margin: 6px 0 14px; }
+  .wl-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+  .wl-dot { width: 18px; height: 3px; border-radius: 2px; }
+  .effects-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0; }
+  .effects-table th { background: var(--surface2); color: var(--text2); font-weight: 600; padding: 8px 12px; text-align: left; border: 1px solid var(--border); }
+  .effects-table td { padding: 7px 12px; border: 1px solid var(--border); color: var(--text); }
+  .effects-table tr:nth-child(even) td { background: var(--surface2); }
+  .up { color: #1baf7a; font-weight: 600; }
+  .down { color: var(--danger); font-weight: 600; }
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin: 14px 0; }
+  .toggle { position: relative; width: 38px; height: 22px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; inset: 0; background: var(--border-strong);
+    border-radius: 22px; cursor: pointer; transition: .2s;
+  }
+  .toggle input:checked + .toggle-slider { background: var(--accent); }
+  .toggle-slider::before {
+    content: ''; position: absolute; width: 15px; height: 15px;
+    left: 3.5px; top: 3.5px; background: #fff; border-radius: 50%; transition: .2s;
+  }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+  .badge {
+    display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+  }
+  .badge.blue { background: var(--accent-bg); color: var(--accent-text); }
+  .badge.green { background: #eaf3de; color: #3b6d11; }
+  .badge.amber { background: var(--warn-bg); color: var(--warn-text); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="app-title">
+    <svg class="icon" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M5 10 Q5 6 9 6 L21 6 Q25 6 25 10 L25 20 Q25 24 21 24 L9 24 Q5 24 5 20 Z" stroke="var(--accent)" stroke-width="1.5" fill="none"/>
+      <path d="M9 6 L9 24" stroke="var(--amber)" stroke-width="2"/>
+      <path d="M21 6 L21 24" stroke="var(--amber)" stroke-width="2"/>
+      <path d="M10 10 Q15 8 20 10" stroke="var(--accent)" stroke-width="1.5" fill="none"/>
+      <path d="M10 14 Q15 12 20 14" stroke="var(--accent)" stroke-width="1.5" fill="none"/>
+      <path d="M10 18 Q15 16 20 18" stroke="var(--accent)" stroke-width="1.5" fill="none"/>
+    </svg>
+    <span id="app-title-text">Inductor & Transformer Designer</span>
+  </div>
+  <div class="lang-bar">
+    <button class="lang-btn active" onclick="setLang('pt')">🇧🇷 PT</button>
+    <button class="lang-btn" onclick="setLang('en')">🇺🇸 EN</button>
+    <button class="lang-btn" onclick="setLang('es')">🇪🇸 ES</button>
+    <button class="lang-btn" onclick="setLang('fr')">🇫🇷 FR</button>
+  </div>
+</header>
+
+<div class="main-tabs">
+  <button class="main-tab active" onclick="setTab('inductor')" id="maintab-inductor">Indutor</button>
+  <button class="main-tab" onclick="setTab('transformer')" id="maintab-transformer">Transformador</button>
+  <button class="main-tab" onclick="setTab('learn')" id="maintab-learn">Teoria</button>
+</div>
+
+<!-- ==================== INDUTOR ==================== -->
+<div class="content">
+<div class="panel active" id="panel-inductor">
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <h3 id="h-geometry">Geometria da Bobina</h3>
+        <div class="field">
+          <label id="lbl-coiltype">Tipo de espira</label>
+          <select id="coilType" onchange="calc()">
+            <option value="solenoid">Solenoide (cilíndrico)</option>
+            <option value="toroid">Toroide</option>
+            <option value="spiral">Espiral plana (Pancake)</option>
+            <option value="multilayer">Multicamada</option>
+            <option value="pot">Núcleo de pote (Pot core)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="lbl-turns">Número de espiras (N)</label>
+          <div class="range-row">
+            <input type="range" id="turns" min="1" max="1000" value="50" step="1" oninput="calc()">
+            <span class="range-val" id="turns-out">50</span>
+          </div>
+        </div>
+        <div class="field">
+          <label id="lbl-radius">Raio da espira (r) — mm</label>
+          <div class="range-row">
+            <input type="range" id="radius" min="1" max="150" value="15" step="0.5" oninput="calc()">
+            <span class="range-val" id="radius-out">15.0 mm</span>
+          </div>
+        </div>
+        <div class="field">
+          <label id="lbl-pitch">Distância entre espiras (p) — mm</label>
+          <div class="range-row">
+            <input type="range" id="pitch" min="0.1" max="15" value="1.0" step="0.1" oninput="calc()">
+            <span class="range-val" id="pitch-out">1.0 mm</span>
+          </div>
+        </div>
+        <div class="field">
+          <label id="lbl-wire">Diâmetro do fio (d) — mm</label>
+          <div class="range-row">
+            <input type="range" id="wireDiam" min="0.05" max="6" value="0.5" step="0.05" oninput="calc()">
+            <span class="range-val" id="wireDiam-out">0.50 mm</span>
+          </div>
+        </div>
+        <div class="field">
+          <label id="lbl-layers">Número de camadas</label>
+          <div class="range-row">
+            <input type="range" id="layers" min="1" max="20" value="1" step="1" oninput="calc()">
+            <span class="range-val" id="layers-out">1</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 id="h-core">Núcleo Magnético</h3>
+        <div class="field">
+          <label id="lbl-coretype">Material do núcleo</label>
+          <select id="coreType" onchange="coreChanged()">
+            <option value="air">Ar (μr = 1)</option>
+            <option value="ferrite" selected>Ferrite (μr ≈ 2000, Bsat ≈ 0.4 T)</option>
+            <option value="iron">Ferro silício (μr ≈ 4000, Bsat ≈ 1.8 T)</option>
+            <option value="carbonyl">Carbonyl iron (μr ≈ 35, Bsat ≈ 1.0 T)</option>
+            <option value="amorphous">Amorfo Metálico (μr ≈ 8000, Bsat ≈ 1.5 T)</option>
+            <option value="nanocrystalline">Nanocristalino (μr ≈ 20000, Bsat ≈ 1.2 T)</option>
+            <option value="mpp">MPP Molypermalloy (μr ≈ 125, Bsat ≈ 0.8 T)</option>
+            <option value="custom">Personalizado</option>
+          </select>
+        </div>
+        <div class="field" id="customMu-wrap" style="display:none">
+          <label>μr personalizado</label>
+          <input type="number" id="customMu" value="100" min="1" step="1" oninput="calc()">
+        </div>
+        <div class="field" id="customBsat-wrap" style="display:none">
+          <label id="lbl-bsat">Bsat personalizado (T)</label>
+          <input type="number" id="customBsat" value="1.0" min="0.01" step="0.01" oninput="calc()">
+        </div>
+        <div class="field">
+          <label id="lbl-gaplen">Entreferro / Air gap (g) — mm</label>
+          <div class="range-row">
+            <input type="range" id="gapLen" min="0" max="10" value="0" step="0.05" oninput="calc()">
+            <span class="range-val" id="gapLen-out">0.00 mm</span>
+          </div>
+        </div>
+        <div class="field">
+          <label id="lbl-coreArea">Área da seção transversal (Ac) — cm²</label>
+          <div class="range-row">
+            <input type="range" id="coreArea" min="0.05" max="50" value="1.0" step="0.05" oninput="calc()">
+            <span class="range-val" id="coreArea-out">1.00 cm²</span>
+          </div>
+        </div>
+        <div class="field">
+          <label id="lbl-corelen">Comprimento do caminho magnético (le) — mm</label>
+          <div class="range-row">
+            <input type="range" id="corelen" min="5" max="600" value="100" step="5" oninput="calc()">
+            <span class="range-val" id="corelen-out">100 mm</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h3 id="h-elec">Parâmetros Elétricos</h3>
+        <div class="field">
+          <label id="lbl-freq">Frequência de operação (f)</label>
+          <div class="range-row">
+            <input type="range" id="freq" min="0" max="7" value="2" step="0.05" oninput="calc()">
+            <span class="range-val" id="freq-out">100 Hz</span>
+          </div>
+        </div>
+        <div class="field">
+          <label id="lbl-voltage">Tensão de entrada (Vin) — V</label>
+          <div class="range-row">
+            <input type="range" id="voltage" min="1" max="10000" value="120" step="1" oninput="calc()">
+            <span class="range-val" id="voltage-out">120 V</span>
+          </div>
+        </div>
+        <div class="field">
+          <label id="lbl-current">Corrente de pico (Ipk) — A</label>
+          <div class="range-row">
+            <input type="range" id="current" min="0.001" max="200" value="1.0" step="0.001" oninput="calc()">
+            <span class="range-val" id="current-out">1.000 A</span>
+          </div>
+        </div>
+        <div class="field">
+          <label id="lbl-dcbias">Polarização DC (IDC bias) — A</label>
+          <div class="range-row">
+            <input type="range" id="dcBias" min="0" max="100" value="0" step="0.1" oninput="calc()">
+            <span class="range-val" id="dcBias-out">0.0 A</span>
+          </div>
+        </div>
+        <div class="field">
+          <label id="lbl-waveform">Forma de onda</label>
+          <select id="waveform" onchange="calc()">
+            <option value="sine">Senoidal</option>
+            <option value="square">Quadrada</option>
+            <option value="triangle">Triangular</option>
+            <option value="sawtooth">Dente de serra</option>
+            <option value="dc">DC (contínua)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="lbl-dutycycle">Duty cycle (%) — para onda quadrada</label>
+          <div class="range-row">
+            <input type="range" id="dutyCycle" min="1" max="99" value="50" step="1" oninput="calc()">
+            <span class="range-val" id="dutyCycle-out">50%</span>
+          </div>
+        </div>
+        <div class="field">
+          <label id="lbl-temp">Temperatura de operação (°C)</label>
+          <div class="range-row">
+            <input type="range" id="temp" min="-40" max="200" value="25" step="5" oninput="calc()">
+            <span class="range-val" id="temp-out">25 °C</span>
+          </div>
+        </div>
+        <div class="field">
+          <label id="lbl-rload">Carga resistiva (RL) — Ω</label>
+          <div class="range-row">
+            <input type="range" id="rLoad" min="0.1" max="10000" value="100" step="0.1" oninput="calc()">
+            <span class="range-val" id="rLoad-out">100 Ω</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 id="h-results">Resultados Calculados</h3>
+        <div class="metrics-grid" id="metrics-ind"></div>
+        <div id="delta-ind"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Visualizações -->
+  <div class="section-title" id="sect-visual">📐 Visualização da Bobina & Formas de Onda</div>
+  <div class="grid2">
+    <div>
+      <div class="canvas-wrap">
+        <canvas id="coilCanvas" height="220"></canvas>
+      </div>
+      <div class="canvas-label" id="lbl-coilrender">Desenho esquemático — atualiza em tempo real</div>
+    </div>
+    <div>
+      <div class="canvas-wrap">
+        <canvas id="waveCanvas" height="220"></canvas>
+      </div>
+      <div class="wl-legend">
+        <div class="wl-item"><div class="wl-dot" style="background:#2a78d6"></div><span id="leg-vin">Tensão Vin</span></div>
+        <div class="wl-item"><div class="wl-dot" style="background:#1baf7a;border-top:2px dashed #1baf7a;height:0;width:18px"></div><span id="leg-il">Corrente IL</span></div>
+        <div class="wl-item"><div class="wl-dot" style="background:#eda100"></div><span id="leg-flux">Fluxo Φ (×10⁻⁴ Wb)</span></div>
+        <div class="wl-item"><div class="wl-dot" style="background:#e24b4a;border-top:2px dotted #e24b4a;height:0;width:18px"></div><span id="leg-vl">Tensão VL</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title" id="sect-bh">🧲 Curva B-H e Ponto de Operação</div>
+  <div class="canvas-wrap">
+    <canvas id="bhCanvas" height="250"></canvas>
+  </div>
+  <div class="canvas-label" id="lbl-bhrender">Curva B-H simplificada com ponto de operação (•) e saturação (linha tracejada)</div>
+</div>
+
+<!-- ==================== TRANSFORMADOR ==================== -->
+<div class="panel" id="panel-transformer">
+  <div class="toggle-row">
+    <span id="lbl-trafomode" style="font-size:14px;font-weight:500">Modo transformador completo:</span>
+    <label class="toggle"><input type="checkbox" id="coupledMode" onchange="calcTrafo()"><span class="toggle-slider"></span></label>
+    <span id="lbl-trafoshow" style="font-size:13px;color:var(--text2)">Ativar análise de secundário</span>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3 id="h-primary">🔵 Enrolamento Primário (N₁)</h3>
+      <div class="field">
+        <label id="lbl-pturns">Espiras primárias (N₁)</label>
+        <div class="range-row">
+          <input type="range" id="pTurns" min="1" max="2000" value="200" step="1" oninput="calcTrafo()">
+          <span class="range-val" id="pTurns-out">200</span>
+        </div>
+      </div>
+      <div class="field">
+        <label id="lbl-pvolt">Tensão primária (V₁) — V</label>
+        <div class="range-row">
+          <input type="range" id="pVolt" min="1" max="100000" value="220" step="1" oninput="calcTrafo()">
+          <span class="range-val" id="pVolt-out">220 V</span>
+        </div>
+      </div>
+      <div class="field">
+        <label id="lbl-pcurr">Corrente primária (I₁) — A</label>
+        <div class="range-row">
+          <input type="range" id="pCurr" min="0.001" max="500" value="1.0" step="0.001" oninput="calcTrafo()">
+          <span class="range-val" id="pCurr-out">1.000 A</span>
+        </div>
+      </div>
+      <div class="field">
+        <label id="lbl-pfreq">Frequência (f) — Hz</label>
+        <div class="range-row">
+          <input type="range" id="pFreq" min="0" max="7" value="2.301" step="0.05" oninput="calcTrafo()">
+          <span class="range-val" id="pFreq-out">200 Hz</span>
+        </div>
+      </div>
+      <div class="field">
+        <label id="lbl-pres">Resistência do enrolamento primário (R₁) — Ω</label>
+        <div class="range-row">
+          <input type="range" id="pRes" min="0.001" max="100" value="0.5" step="0.001" oninput="calcTrafo()">
+          <span class="range-val" id="pRes-out">0.500 Ω</span>
+        </div>
+      </div>
+      <div class="field">
+        <label id="lbl-pradius">Raio médio — mm</label>
+        <div class="range-row">
+          <input type="range" id="pRadius" min="5" max="300" value="50" step="1" oninput="calcTrafo()">
+          <span class="range-val" id="pRadius-out">50 mm</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 id="h-secondary">🟢 Enrolamento Secundário (N₂)</h3>
+      <div class="field">
+        <label id="lbl-sturns">Espiras secundárias (N₂)</label>
+        <div class="range-row">
+          <input type="range" id="sTurns" min="1" max="2000" value="100" step="1" oninput="calcTrafo()">
+          <span class="range-val" id="sTurns-out">100</span>
+        </div>
+      </div>
+      <div class="field">
+        <label id="lbl-sload">Carga resistiva (R_L) — Ω</label>
+        <div class="range-row">
+          <input type="range" id="sLoad" min="0.1" max="100000" value="100" step="0.1" oninput="calcTrafo()">
+          <span class="range-val" id="sLoad-out">100 Ω</span>
+        </div>
+      </div>
+      <div class="field">
+        <label id="lbl-sres">Resistência do enrolamento (R₂) — Ω</label>
+        <div class="range-row">
+          <input type="range" id="sRes" min="0.001" max="100" value="0.3" step="0.001" oninput="calcTrafo()">
+          <span class="range-val" id="sRes-out">0.300 Ω</span>
+        </div>
+      </div>
+      <div class="field">
+        <label id="lbl-coupling">Coeficiente de acoplamento (k)</label>
+        <div class="range-row">
+          <input type="range" id="coupling" min="0.01" max="1" value="0.98" step="0.01" oninput="calcTrafo()">
+          <span class="range-val" id="coupling-out">0.98</span>
+        </div>
+      </div>
+      <div class="field">
+        <label id="lbl-coretype2">Material do núcleo</label>
+        <select id="coreType2" onchange="calcTrafo()">
+          <option value="ferrite" selected>Ferrite (μr ≈ 2000)</option>
+          <option value="iron">Ferro silício (μr ≈ 4000)</option>
+          <option value="amorphous">Amorfo (μr ≈ 8000)</option>
+          <option value="nanocrystalline">Nanocristalino (μr ≈ 20000)</option>
+          <option value="mpp">MPP (μr ≈ 125)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label id="lbl-coildist">Distância entre enrolamentos — mm</label>
+        <div class="range-row">
+          <input type="range" id="coilDist" min="0" max="100" value="5" step="1" oninput="calcTrafo()">
+          <span class="range-val" id="coilDist-out">5 mm</span>
+        </div>
+      </div>
+      <div class="field">
+        <label id="lbl-coreArea2">Área da seção transversal (Ac) — cm²</label>
+        <div class="range-row">
+          <input type="range" id="coreArea2" min="0.05" max="100" value="5" step="0.05" oninput="calcTrafo()">
+          <span class="range-val" id="coreArea2-out">5.00 cm²</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 id="h-trafo-results">Resultados do Transformador</h3>
+    <div class="metrics-grid" id="metrics-trafo"></div>
+    <div id="delta-trafo"></div>
+  </div>
+
+  <div class="section-title" id="sect-trafo-vis">📐 Visualização do Transformador & Formas de Onda</div>
+  <div class="grid2">
+    <div>
+      <div class="canvas-wrap">
+        <canvas id="trafoCanvas" height="260"></canvas>
+      </div>
+      <div class="canvas-label" id="lbl-traforender">Esquema do transformador — desenho em tempo real</div>
+    </div>
+    <div>
+      <div class="canvas-wrap">
+        <canvas id="trafoWaveCanvas" height="260"></canvas>
+      </div>
+      <div class="wl-legend">
+        <div class="wl-item"><div class="wl-dot" style="background:#2a78d6"></div><span id="leg-v1">V₁ primário</span></div>
+        <div class="wl-item"><div class="wl-dot" style="background:#1baf7a"></div><span id="leg-v2">V₂ secundário</span></div>
+        <div class="wl-item"><div class="wl-dot" style="background:#eda100;border-top:2px dashed #eda100;height:0;width:18px"></div><span id="leg-i2">I₂ corrente secundária</span></div>
+        <div class="wl-item"><div class="wl-dot" style="background:#e24b4a;border-top:2px dotted #e24b4a;height:0;width:18px"></div><span id="leg-phi">Fluxo magnético Φ</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TEORIA ==================== -->
+<div class="panel" id="panel-learn">
+  <div class="card">
+    <h3 id="h-theory-ind">Como funciona um Indutor?</h3>
+    <div class="explain-box" id="theory-ind-text"></div>
+  </div>
+  <div class="card">
+    <h3 id="h-theory-trafo">Como funciona um Transformador?</h3>
+    <div class="explain-box" id="theory-trafo-text"></div>
+  </div>
+  <div class="card">
+    <h3 id="h-formulas">Fórmulas Essenciais</h3>
+    <div class="formula-grid" id="formulas-grid"></div>
+  </div>
+  <div class="card">
+    <h3 id="h-effects">Efeito de Cada Parâmetro</h3>
+    <table class="effects-table" id="effects-table">
+      <thead><tr><th id="th-param">Parâmetro</th><th id="th-increase">Aumenta</th><th id="th-effect">Efeito em L, B, Q</th></tr></thead>
+      <tbody id="effects-body"></tbody>
+    </table>
+  </div>
+  <div class="card">
+    <h3 id="h-cores">Comparação de Materiais de Núcleo</h3>
+    <table class="effects-table" id="core-table">
+      <thead><tr>
+        <th id="th-material">Material</th><th>μr</th><th>Bsat (T)</th>
+        <th id="th-fmax">f máx</th><th id="th-app">Aplicação típica</th>
+      </tr></thead>
+      <tbody id="cores-body"></tbody>
+    </table>
+  </div>
+</div>
+</div><!-- /content -->
+
+<script>
+const MU0 = 4*Math.PI*1e-7;
+const CORE_DATA = {
+  air:           { mu_r:1,     bsat:10,  fmax:1e12, app:{pt:'Bobinas de RF, ar livre',en:'RF coils, air core',es:'Bobinas RF, núcleo de aire',fr:'Bobines RF, noyau d\'air'} },
+  ferrite:       { mu_r:2000,  bsat:0.4, fmax:1e6,  app:{pt:'SMPS, filtros de alta freq.',en:'SMPS, high-freq filters',es:'SMPS, filtros alta frec.',fr:'SMPS, filtres haute fréq.'} },
+  iron:          { mu_r:4000,  bsat:1.8, fmax:1e3,  app:{pt:'Trafos de baixa freq., filtros 50/60Hz',en:'Low-freq. transformers, 50/60Hz filters',es:'Trafos baja frec., filtros 50/60Hz',fr:'Trafos basse fréq., filtres 50/60Hz'} },
+  carbonyl:      { mu_r:35,    bsat:1.0, fmax:2e8,  app:{pt:'Filtros de RF, MHz',en:'RF filters, MHz range',es:'Filtros RF, rango MHz',fr:'Filtres RF, gamme MHz'} },
+  amorphous:     { mu_r:8000,  bsat:1.5, fmax:1e5,  app:{pt:'Inversores, UPS, media freq.',en:'Inverters, UPS, medium freq.',es:'Inversores, UPS, media frec.',fr:'Onduleurs, UPS, moy. fréq.'} },
+  nanocrystalline:{ mu_r:20000, bsat:1.2, fmax:1e5, app:{pt:'Alta eficiência, sensores de corrente',en:'High efficiency, current sensors',es:'Alta eficiencia, sensores de corriente',fr:'Haute efficacité, capteurs de courant'} },
+  mpp:           { mu_r:125,   bsat:0.8, fmax:5e6,  app:{pt:'Indutores de filtro DC, alta corrente',en:'DC filter inductors, high current',es:'Inductores filtro DC, alta corriente',fr:'Inducteurs filtre DC, fort courant'} },
+  custom:        { mu_r:100,   bsat:1.0, fmax:1e6,  app:{pt:'Personalizado',en:'Custom',es:'Personalizado',fr:'Personnalisé'} }
+};
+
+let lang='pt';
+let prevInd={}, prevTrafo={};
+
+const T={
+  pt:{
+    tab_ind:'Indutor',tab_trafo:'Transformador',tab_learn:'Teoria',
+    h_geometry:'Geometria da Bobina',lbl_coiltype:'Tipo de espira',
+    lbl_turns:'Número de espiras (N)',lbl_radius:'Raio da espira (r) — mm',
+    lbl_pitch:'Distância entre espiras (p) — mm',lbl_wire:'Diâmetro do fio (d) — mm',
+    lbl_layers:'Número de camadas',
+    h_core:'Núcleo Magnético',lbl_coretype:'Material do núcleo',
+    lbl_bsat:'Bsat personalizado (T)',
+    lbl_gaplen:'Entreferro / Air gap (g) — mm',lbl_coreArea:'Área da seção transversal (Ac) — cm²',
+    lbl_corelen:'Comprimento do caminho magnético (le) — mm',
+    h_elec:'Parâmetros Elétricos',lbl_freq:'Frequência de operação (f)',
+    lbl_voltage:'Tensão de entrada (Vin) — V',lbl_current:'Corrente de pico (Ipk) — A',
+    lbl_dcbias:'Polarização DC (IDC bias) — A',lbl_waveform:'Forma de onda',
+    lbl_dutycycle:'Duty cycle (%) — para onda quadrada',
+    lbl_temp:'Temperatura de operação (°C)',lbl_rload:'Carga resistiva (RL) — Ω',
+    h_results:'Resultados Calculados',sect_visual:'📐 Visualização da Bobina & Formas de Onda',
+    lbl_coilrender:'Desenho esquemático — atualiza em tempo real',
+    sect_bh:'🧲 Curva B-H e Ponto de Operação',
+    lbl_bhrender:'Curva B-H simplificada com ponto de operação (•) e saturação (linha tracejada)',
+    lbl_trafomode:'Modo transformador completo:',lbl_trafoshow:'Ativar análise de secundário',
+    h_primary:'🔵 Enrolamento Primário (N₁)',lbl_pturns:'Espiras primárias (N₁)',
+    lbl_pvolt:'Tensão primária (V₁) — V',lbl_pcurr:'Corrente primária (I₁) — A',
+    lbl_pfreq:'Frequência (f) — Hz',lbl_pres:'Resistência do enrolamento primário (R₁) — Ω',
+    lbl_pradius:'Raio médio — mm',
+    h_secondary:'🟢 Enrolamento Secundário (N₂)',lbl_sturns:'Espiras secundárias (N₂)',
+    lbl_sload:'Carga resistiva (R_L) — Ω',lbl_sres:'Resistência do enrolamento (R₂) — Ω',
+    lbl_coupling:'Coeficiente de acoplamento (k)',lbl_coretype2:'Material do núcleo',
+    lbl_coildist:'Distância entre enrolamentos — mm',lbl_coreArea2:'Área da seção transversal (Ac) — cm²',
+    h_trafo_results:'Resultados do Transformador',
+    sect_trafo_vis:'📐 Visualização do Transformador & Formas de Onda',
+    lbl_traforender:'Esquema do transformador — desenho em tempo real',
+    leg_vin:'Tensão Vin',leg_il:'Corrente IL',leg_flux:'Fluxo Φ (×10⁻⁴ Wb)',leg_vl:'Tensão VL',
+    leg_v1:'V₁ primário',leg_v2:'V₂ secundário',leg_i2:'I₂ corrente secundária',leg_phi:'Fluxo magnético Φ',
+    h_theory_ind:'Como funciona um Indutor?',h_theory_trafo:'Como funciona um Transformador?',
+    h_formulas:'Fórmulas Essenciais',h_effects:'Efeito de Cada Parâmetro',
+    h_cores:'Comparação de Materiais de Núcleo',
+    th_param:'Parâmetro',th_increase:'Aumenta →',th_effect:'Efeito em L, B, Q',
+    th_material:'Material',th_fmax:'f máx',th_app:'Aplicação típica',
+    theory_ind:`Um indutor armazena energia em um campo magnético criado pela corrente que circula por suas espiras. A lei de Faraday-Lenz explica seu funcionamento: qualquer variação no fluxo magnético induz uma tensão que se opõe à variação da corrente. Isso gera a reatância indutiva XL = 2πfL — quanto maior a frequência, maior a oposição ao fluxo de corrente alternada. Por isso indutores bloqueiam AC e deixam passar DC.\n\nA indutância L (em Henry) depende de: N² (espiras ao quadrado), μ₀μr (permeabilidade do núcleo), Ac (área da seção transversal) e le (comprimento do caminho magnético). Adicionar um entreferro reduz a indutância mas aumenta a tolerância à corrente DC sem saturar. O núcleo satura quando B ≥ Bsat — nesse ponto a indutância colapsa abruptamente.`,
+    theory_trafo:`Um transformador usa dois enrolamentos no mesmo núcleo magnético. A corrente AC no primário cria um fluxo magnético variável que atravessa o núcleo compartilhado. Pela lei de Faraday, esse fluxo induz uma tensão no secundário proporcional à razão de espiras: V₂/V₁ = N₂/N₁ = 1/a. Pela conservação de energia, a potência se conserva (idealmente): V₁·I₁ = V₂·I₂. Se a tensão sobe, a corrente cai na mesma proporção.\n\nO coeficiente de acoplamento k (0 a 1) mede quanto do fluxo do primário enlaça o secundário. k = 1 é o transformador ideal. Perdas reais incluem: resistência dos enrolamentos (perdas Joule), perdas por histerese no núcleo, correntes de Foucault (eddy currents) e fluxo disperso. A impedância refletida do secundário para o primário é Z₁' = a²·ZL.`,
+    metrics:{
+      L:'Indutância',XL:'Reatância XL',W:'Energia',B:'Campo B',H:'Campo H',
+      Q:'Fator Q',Rdc:'Resist. DC',Z:'|Z| total',flux:'Fluxo Φ',Vc:'Queda R',
+      ratio:'Razão N₁/N₂',V2:'Tensão V₂',I2:'Corrente I₂',P_in:'Pot. entrada',
+      P2:'Pot. saída',eff:'Eficiência',M:'Ind. mútua',Vdrop:'Queda 2.',Btrafo:'Campo B trafo'
+    },
+    effects:[
+      ['↑ Espiras (N)','L aumenta com N²','L×4 ao dobrar N, B sobe, mais perdas DC'],
+      ['↑ Permeabilidade (μr)','L aumenta linearmente','Maior sensibilidade a saturação, perdas por histerese'],
+      ['↑ Área transversal (Ac)','L aumenta linearmente','Mais fluxo disponível, Bsat mais difícil de atingir'],
+      ['↑ Comprimento (le)','L diminui','Mais resistência magnética, campo H menor por A·volta'],
+      ['↑ Entreferro (gap)','L diminui','Mais tolerância a IDC bias, mais fluxo disperso'],
+      ['↑ Frequência (f)','XL = 2πfL aumenta','Skin effect ↑ R, perdas histerese ↑, capacitância parasita'],
+      ['↑ Temperatura','R do fio aumenta','Q cai, μr pode mudar, próximo de Curie: μr → 0'],
+      ['↑ Corrente DC bias','B aumenta','Risco de saturação: L colapsa quando B ≥ Bsat'],
+      ['↑ Diâmetro do fio','R diminui','Menos perdas Joule, mais peso e volume, melhor Q'],
+    ],
+    saturation:'⚠ Núcleo saturando! B ≥ Bsat — indutância colapsa',
+    freq_warn:'⚠ Frequência acima do limite recomendado para este material',
+    dc_warn:'⚠ Corrente DC pode saturar o núcleo',
+    wf_names:{sine:'Senoidal',square:'Quadrada',triangle:'Triangular',sawtooth:'Dente de serra',dc:'DC'},
+    coiltype_names:{solenoid:'Solenoide',toroid:'Toroide',spiral:'Espiral Plana',multilayer:'Multicamada',pot:'Núcleo de Pote'},
+  },
+  en:{
+    tab_ind:'Inductor',tab_trafo:'Transformer',tab_learn:'Theory',
+    h_geometry:'Coil Geometry',lbl_coiltype:'Coil type',
+    lbl_turns:'Number of turns (N)',lbl_radius:'Turn radius (r) — mm',
+    lbl_pitch:'Turn spacing (p) — mm',lbl_wire:'Wire diameter (d) — mm',
+    lbl_layers:'Number of layers',
+    h_core:'Magnetic Core',lbl_coretype:'Core material',lbl_bsat:'Custom Bsat (T)',
+    lbl_gaplen:'Air gap (g) — mm',lbl_coreArea:'Cross-section area (Ac) — cm²',
+    lbl_corelen:'Magnetic path length (le) — mm',
+    h_elec:'Electrical Parameters',lbl_freq:'Operating frequency (f)',
+    lbl_voltage:'Input voltage (Vin) — V',lbl_current:'Peak current (Ipk) — A',
+    lbl_dcbias:'DC bias (IDC) — A',lbl_waveform:'Waveform',
+    lbl_dutycycle:'Duty cycle (%) — for square wave',
+    lbl_temp:'Operating temperature (°C)',lbl_rload:'Load resistance (RL) — Ω',
+    h_results:'Calculated Results',sect_visual:'📐 Coil Visualization & Waveforms',
+    lbl_coilrender:'Schematic drawing — updates in real time',
+    sect_bh:'🧲 B-H Curve and Operating Point',
+    lbl_bhrender:'Simplified B-H curve with operating point (•) and saturation (dashed line)',
+    lbl_trafomode:'Full transformer mode:',lbl_trafoshow:'Enable secondary analysis',
+    h_primary:'🔵 Primary Winding (N₁)',lbl_pturns:'Primary turns (N₁)',
+    lbl_pvolt:'Primary voltage (V₁) — V',lbl_pcurr:'Primary current (I₁) — A',
+    lbl_pfreq:'Frequency (f) — Hz',lbl_pres:'Primary winding resistance (R₁) — Ω',
+    lbl_pradius:'Mean radius — mm',
+    h_secondary:'🟢 Secondary Winding (N₂)',lbl_sturns:'Secondary turns (N₂)',
+    lbl_sload:'Load resistance (R_L) — Ω',lbl_sres:'Secondary winding resistance (R₂) — Ω',
+    lbl_coupling:'Coupling coefficient (k)',lbl_coretype2:'Core material',
+    lbl_coildist:'Distance between windings — mm',lbl_coreArea2:'Cross-section area (Ac) — cm²',
+    h_trafo_results:'Transformer Results',
+    sect_trafo_vis:'📐 Transformer Visualization & Waveforms',
+    lbl_traforender:'Transformer schematic — real-time drawing',
+    leg_vin:'Voltage Vin',leg_il:'Inductor current IL',leg_flux:'Flux Φ (×10⁻⁴ Wb)',leg_vl:'Voltage VL',
+    leg_v1:'V₁ primary',leg_v2:'V₂ secondary',leg_i2:'I₂ secondary current',leg_phi:'Magnetic flux Φ',
+    h_theory_ind:'How does an Inductor work?',h_theory_trafo:'How does a Transformer work?',
+    h_formulas:'Key Formulas',h_effects:'Effect of Each Parameter',
+    h_cores:'Core Material Comparison',
+    th_param:'Parameter',th_increase:'Increases →',th_effect:'Effect on L, B, Q',
+    th_material:'Material',th_fmax:'f max',th_app:'Typical application',
+    theory_ind:`An inductor stores energy in a magnetic field created by current flowing through its turns. The Faraday-Lenz law explains its operation: any change in magnetic flux induces a voltage that opposes the change in current. This creates inductive reactance XL = 2πfL — the higher the frequency, the greater the opposition to AC current flow. That's why inductors block AC and pass DC.\n\nInductance L (in Henry) depends on: N² (turns squared), μ₀μr (core permeability), Ac (cross-sectional area) and le (magnetic path length). Adding an air gap reduces inductance but increases DC current tolerance before saturation. The core saturates when B ≥ Bsat — at that point inductance collapses abruptly.`,
+    theory_trafo:`A transformer uses two windings on the same magnetic core. AC current in the primary creates a varying magnetic flux through the shared core. By Faraday's law, this flux induces a voltage in the secondary proportional to the turns ratio: V₂/V₁ = N₂/N₁ = 1/a. By energy conservation, power is preserved (ideally): V₁·I₁ = V₂·I₂. If voltage goes up, current goes down proportionally.\n\nCoupling coefficient k (0 to 1) measures how much primary flux links the secondary. k = 1 is the ideal transformer. Real losses include: winding resistance (copper loss), hysteresis loss, eddy currents, and leakage flux. The reflected impedance from secondary to primary is Z₁' = a²·ZL.`,
+    metrics:{
+      L:'Inductance',XL:'Reactance XL',W:'Energy',B:'B field',H:'H field',
+      Q:'Q factor',Rdc:'DC resist.',Z:'|Z| total',flux:'Flux Φ',Vc:'R drop',
+      ratio:'N₁/N₂ ratio',V2:'Voltage V₂',I2:'Current I₂',P_in:'Input power',
+      P2:'Output power',eff:'Efficiency',M:'Mutual ind.',Vdrop:'Sec. drop',Btrafo:'B field trafo'
+    },
+    effects:[
+      ['↑ Turns (N)','L increases with N²','L×4 when doubling N, B rises, more DC losses'],
+      ['↑ Permeability (μr)','L increases linearly','More saturation sensitivity, hysteresis losses'],
+      ['↑ Cross-section (Ac)','L increases linearly','More flux capacity, harder to saturate'],
+      ['↑ Path length (le)','L decreases','More magnetic resistance, lower H per A·turn'],
+      ['↑ Air gap','L decreases','More DC bias tolerance, more leakage flux'],
+      ['↑ Frequency (f)','XL = 2πfL increases','Skin effect ↑ R, hysteresis ↑, parasitic capacitance'],
+      ['↑ Temperature','Wire R increases','Q drops, μr may change, near Curie point: μr → 0'],
+      ['↑ DC bias current','B increases','Saturation risk: L collapses when B ≥ Bsat'],
+      ['↑ Wire diameter','R decreases','Less copper loss, heavier, better Q factor'],
+    ],
+    saturation:'⚠ Core saturating! B ≥ Bsat — inductance collapses',
+    freq_warn:'⚠ Frequency above recommended limit for this core material',
+    dc_warn:'⚠ DC current may saturate the core',
+    wf_names:{sine:'Sine',square:'Square',triangle:'Triangle',sawtooth:'Sawtooth',dc:'DC'},
+    coiltype_names:{solenoid:'Solenoid',toroid:'Toroid',spiral:'Flat Spiral',multilayer:'Multi-layer',pot:'Pot Core'},
+  },
+  es:{
+    tab_ind:'Inductor',tab_trafo:'Transformador',tab_learn:'Teoría',
+    h_geometry:'Geometría de la Bobina',lbl_coiltype:'Tipo de espira',
+    lbl_turns:'Número de espiras (N)',lbl_radius:'Radio de espira (r) — mm',
+    lbl_pitch:'Distancia entre espiras (p) — mm',lbl_wire:'Diámetro del hilo (d) — mm',
+    lbl_layers:'Número de capas',
+    h_core:'Núcleo Magnético',lbl_coretype:'Material del núcleo',lbl_bsat:'Bsat personalizado (T)',
+    lbl_gaplen:'Entrehierro (g) — mm',lbl_coreArea:'Área transversal (Ac) — cm²',
+    lbl_corelen:'Longitud del camino magnético (le) — mm',
+    h_elec:'Parámetros Eléctricos',lbl_freq:'Frecuencia de operación (f)',
+    lbl_voltage:'Tensión de entrada (Vin) — V',lbl_current:'Corriente de pico (Ipk) — A',
+    lbl_dcbias:'Polarización DC (IDC) — A',lbl_waveform:'Forma de onda',
+    lbl_dutycycle:'Ciclo de trabajo (%) — para onda cuadrada',
+    lbl_temp:'Temperatura de operación (°C)',lbl_rload:'Carga resistiva (RL) — Ω',
+    h_results:'Resultados Calculados',sect_visual:'📐 Visualización de Bobina & Formas de Onda',
+    lbl_coilrender:'Dibujo esquemático — se actualiza en tiempo real',
+    sect_bh:'🧲 Curva B-H y Punto de Operación',
+    lbl_bhrender:'Curva B-H simplificada con punto de operación (•) y saturación (línea punteada)',
+    lbl_trafomode:'Modo transformador completo:',lbl_trafoshow:'Activar análisis del secundario',
+    h_primary:'🔵 Devanado Primario (N₁)',lbl_pturns:'Espiras primarias (N₁)',
+    lbl_pvolt:'Tensión primaria (V₁) — V',lbl_pcurr:'Corriente primaria (I₁) — A',
+    lbl_pfreq:'Frecuencia (f) — Hz',lbl_pres:'Resistencia del devanado primario (R₁) — Ω',
+    lbl_pradius:'Radio medio — mm',
+    h_secondary:'🟢 Devanado Secundario (N₂)',lbl_sturns:'Espiras secundarias (N₂)',
+    lbl_sload:'Carga resistiva (R_L) — Ω',lbl_sres:'Resistencia del devanado (R₂) — Ω',
+    lbl_coupling:'Coeficiente de acoplamiento (k)',lbl_coretype2:'Material del núcleo',
+    lbl_coildist:'Distancia entre devanados — mm',lbl_coreArea2:'Área transversal (Ac) — cm²',
+    h_trafo_results:'Resultados del Transformador',
+    sect_trafo_vis:'📐 Visualización del Transformador & Formas de Onda',
+    lbl_traforender:'Esquema del transformador — dibujo en tiempo real',
+    leg_vin:'Tensión Vin',leg_il:'Corriente IL',leg_flux:'Flujo Φ (×10⁻⁴ Wb)',leg_vl:'Tensión VL',
+    leg_v1:'V₁ primario',leg_v2:'V₂ secundario',leg_i2:'I₂ corriente secundaria',leg_phi:'Flujo magnético Φ',
+    h_theory_ind:'¿Cómo funciona un Inductor?',h_theory_trafo:'¿Cómo funciona un Transformador?',
+    h_formulas:'Fórmulas Esenciales',h_effects:'Efecto de Cada Parámetro',
+    h_cores:'Comparación de Materiales de Núcleo',
+    th_param:'Parámetro',th_increase:'Aumenta →',th_effect:'Efecto en L, B, Q',
+    th_material:'Material',th_fmax:'f máx',th_app:'Aplicación típica',
+    theory_ind:`Un inductor almacena energía en un campo magnético creado por la corriente que circula por sus espiras. La ley de Faraday-Lenz explica su funcionamiento: cualquier variación en el flujo magnético induce una tensión que se opone al cambio de corriente, creando la reactancia inductiva XL = 2πfL. A mayor frecuencia, mayor oposición al flujo de corriente alterna. Por eso los inductores bloquean AC y dejan pasar DC.\n\nLa inductancia L (en Henry) depende de: N² (espiras al cuadrado), μ₀μr (permeabilidad del núcleo), Ac (área transversal) y le (longitud del camino magnético). El entrehierro reduce L pero aumenta la tolerancia a la corriente DC. El núcleo se satura cuando B ≥ Bsat, momento en que la inductancia colapsa abruptamente.`,
+    theory_trafo:`Un transformador usa dos devanados en el mismo núcleo magnético. La corriente AC en el primario crea un flujo magnético variable que atraviesa el núcleo compartido. Según la ley de Faraday, ese flujo induce una tensión en el secundario proporcional a la razón de espiras: V₂/V₁ = N₂/N₁. Por conservación de energía: V₁·I₁ = V₂·I₂. Si la tensión sube, la corriente baja proporcionalmente.\n\nEl coeficiente de acoplamiento k (0 a 1) mide cuánto del flujo del primario enlaza el secundario. k = 1 es el transformador ideal. Las pérdidas reales incluyen: resistencia de los devanados (pérdidas Joule), histéresis en el núcleo, corrientes de Foucault y flujo disperso. La impedancia reflejada es Z₁' = a²·ZL.`,
+    metrics:{
+      L:'Inductancia',XL:'Reactancia XL',W:'Energía',B:'Campo B',H:'Campo H',
+      Q:'Factor Q',Rdc:'Resist. DC',Z:'|Z| total',flux:'Flujo Φ',Vc:'Caída R',
+      ratio:'Razón N₁/N₂',V2:'Tensión V₂',I2:'Corriente I₂',P_in:'Pot. entrada',
+      P2:'Pot. salida',eff:'Eficiencia',M:'Ind. mutua',Vdrop:'Caída sec.',Btrafo:'Campo B trafo'
+    },
+    effects:[
+      ['↑ Espiras (N)','L aumenta con N²','L×4 al doblar N, B sube, más pérdidas DC'],
+      ['↑ Permeabilidad (μr)','L aumenta linealmente','Mayor sensibilidad a saturación, pérdidas por histéresis'],
+      ['↑ Área transversal (Ac)','L aumenta linealmente','Más capacidad de flujo, saturación más difícil'],
+      ['↑ Longitud (le)','L disminuye','Más reluctancia, menor H por A·vuelta'],
+      ['↑ Entrehierro','L disminuye','Más tolerancia a IDC, más flujo disperso'],
+      ['↑ Frecuencia (f)','XL = 2πfL aumenta','Efecto pelicular ↑ R, histéresis ↑, capacitancia parásita'],
+      ['↑ Temperatura','R del hilo aumenta','Q baja, μr puede variar, cerca de Curie: μr → 0'],
+      ['↑ Corriente DC bias','B aumenta','Riesgo saturación: L colapsa cuando B ≥ Bsat'],
+      ['↑ Diámetro del hilo','R disminuye','Menos pérdidas Joule, mayor peso, mejor Q'],
+    ],
+    saturation:'⚠ ¡Núcleo saturando! B ≥ Bsat — la inductancia colapsa',
+    freq_warn:'⚠ Frecuencia por encima del límite recomendado para este material',
+    dc_warn:'⚠ La corriente DC puede saturar el núcleo',
+    wf_names:{sine:'Senoidal',square:'Cuadrada',triangle:'Triangular',sawtooth:'Diente de sierra',dc:'DC'},
+    coiltype_names:{solenoid:'Solenoide',toroid:'Toroide',spiral:'Espiral Plana',multilayer:'Multicapa',pot:'Núcleo Pot'},
+  },
+  fr:{
+    tab_ind:'Inducteur',tab_trafo:'Transformateur',tab_learn:'Théorie',
+    h_geometry:'Géométrie de la Bobine',lbl_coiltype:'Type de spire',
+    lbl_turns:'Nombre de spires (N)',lbl_radius:'Rayon de spire (r) — mm',
+    lbl_pitch:'Espacement entre spires (p) — mm',lbl_wire:'Diamètre du fil (d) — mm',
+    lbl_layers:'Nombre de couches',
+    h_core:'Noyau Magnétique',lbl_coretype:'Matériau du noyau',lbl_bsat:'Bsat personnalisé (T)',
+    lbl_gaplen:'Entrefer (g) — mm',lbl_coreArea:'Section transversale (Ac) — cm²',
+    lbl_corelen:'Longueur du chemin magnétique (le) — mm',
+    h_elec:'Paramètres Électriques',lbl_freq:'Fréquence de fonctionnement (f)',
+    lbl_voltage:'Tension d\'entrée (Vin) — V',lbl_current:'Courant de crête (Ipk) — A',
+    lbl_dcbias:'Polarisation DC (IDC) — A',lbl_waveform:'Forme d\'onde',
+    lbl_dutycycle:'Rapport cyclique (%) — pour onde carrée',
+    lbl_temp:'Température de fonctionnement (°C)',lbl_rload:'Charge résistive (RL) — Ω',
+    h_results:'Résultats Calculés',sect_visual:'📐 Visualisation Bobine & Formes d\'onde',
+    lbl_coilrender:'Schéma — mis à jour en temps réel',
+    sect_bh:'🧲 Courbe B-H et Point de Fonctionnement',
+    lbl_bhrender:'Courbe B-H simplifiée avec point de fonctionnement (•) et saturation (tirets)',
+    lbl_trafomode:'Mode transformateur complet :',lbl_trafoshow:'Activer l\'analyse du secondaire',
+    h_primary:'🔵 Enroulement Primaire (N₁)',lbl_pturns:'Spires primaires (N₁)',
+    lbl_pvolt:'Tension primaire (V₁) — V',lbl_pcurr:'Courant primaire (I₁) — A',
+    lbl_pfreq:'Fréquence (f) — Hz',lbl_pres:'Résistance d\'enroulement primaire (R₁) — Ω',
+    lbl_pradius:'Rayon moyen — mm',
+    h_secondary:'🟢 Enroulement Secondaire (N₂)',lbl_sturns:'Spires secondaires (N₂)',
+    lbl_sload:'Charge résistive (R_L) — Ω',lbl_sres:'Résistance d\'enroulement (R₂) — Ω',
+    lbl_coupling:'Coefficient de couplage (k)',lbl_coretype2:'Matériau du noyau',
+    lbl_coildist:'Distance entre enroulements — mm',lbl_coreArea2:'Section transversale (Ac) — cm²',
+    h_trafo_results:'Résultats du Transformateur',
+    sect_trafo_vis:'📐 Visualisation Transformateur & Formes d\'onde',
+    lbl_traforender:'Schéma du transformateur — dessin en temps réel',
+    leg_vin:'Tension Vin',leg_il:'Courant IL',leg_flux:'Flux Φ (×10⁻⁴ Wb)',leg_vl:'Tension VL',
+    leg_v1:'V₁ primaire',leg_v2:'V₂ secondaire',leg_i2:'I₂ courant secondaire',leg_phi:'Flux magnétique Φ',
+    h_theory_ind:'Comment fonctionne un Inducteur ?',h_theory_trafo:'Comment fonctionne un Transformateur ?',
+    h_formulas:'Formules Essentielles',h_effects:'Effet de Chaque Paramètre',
+    h_cores:'Comparaison des Matériaux de Noyau',
+    th_param:'Paramètre',th_increase:'Augmente →',th_effect:'Effet sur L, B, Q',
+    th_material:'Matériau',th_fmax:'f max',th_app:'Application typique',
+    theory_ind:`Un inducteur stocke de l'énergie dans un champ magnétique créé par le courant qui circule dans ses spires. La loi de Faraday-Lenz explique son fonctionnement : toute variation du flux magnétique induit une tension qui s'oppose à la variation du courant, créant la réactance inductive XL = 2πfL. Plus la fréquence est élevée, plus cette opposition est grande. C'est pourquoi les inducteurs bloquent le courant AC et laissent passer le DC.\n\nL'inductance L (en Henry) dépend de : N² (carré du nombre de spires), μ₀μr (perméabilité du noyau), Ac (section transversale) et le (longueur du chemin magnétique). Un entrefer réduit L mais augmente la tolérance au courant DC. Le noyau sature quand B ≥ Bsat — l'inductance s'effondre brusquement.`,
+    theory_trafo:`Un transformateur utilise deux enroulements sur le même noyau magnétique. Le courant AC dans le primaire crée un flux magnétique variable qui traverse le noyau commun. Selon la loi de Faraday, ce flux induit une tension dans le secondaire proportionnelle au rapport de spires : V₂/V₁ = N₂/N₁. Par conservation de l'énergie : V₁·I₁ = V₂·I₂. Si la tension augmente, le courant diminue proportionnellement.\n\nLe coefficient de couplage k (0 à 1) mesure quelle fraction du flux primaire lie le secondaire. k = 1 est le transformateur idéal. Les pertes réelles comprennent : résistance des enroulements (pertes cuivre), pertes par hystérésis, courants de Foucault et flux de dispersion. L'impédance réfléchie est Z₁' = a²·ZL.`,
+    metrics:{
+      L:'Inductance',XL:'Réactance XL',W:'Énergie',B:'Champ B',H:'Champ H',
+      Q:'Facteur Q',Rdc:'Résist. DC',Z:'|Z| total',flux:'Flux Φ',Vc:'Chute R',
+      ratio:'Rapport N₁/N₂',V2:'Tension V₂',I2:'Courant I₂',P_in:'Puis. entrée',
+      P2:'Puis. sortie',eff:'Rendement',M:'Ind. mutuelle',Vdrop:'Chute sec.',Btrafo:'Champ B trafo'
+    },
+    effects:[
+      ['↑ Spires (N)','L augmente avec N²','L×4 si on double N, B monte, plus de pertes DC'],
+      ['↑ Perméabilité (μr)','L augmente linéairement','Plus sensible à la saturation, pertes hystérésis'],
+      ['↑ Section (Ac)','L augmente linéairement','Plus de capacité de flux, saturation plus difficile'],
+      ['↑ Longueur (le)','L diminue','Plus de réluctance, H plus faible par A·tour'],
+      ['↑ Entrefer','L diminue','Meilleure tolérance IDC, plus de flux de dispersion'],
+      ['↑ Fréquence (f)','XL = 2πfL augmente','Effet de peau ↑ R, hystérésis ↑, capacité parasite'],
+      ['↑ Température','R du fil augmente','Q baisse, μr peut varier, proche Curie : μr → 0'],
+      ['↑ Courant DC bias','B augmente','Risque saturation : L s\'effondre si B ≥ Bsat'],
+      ['↑ Diamètre du fil','R diminue','Moins de pertes cuivre, plus lourd, meilleur Q'],
+    ],
+    saturation:'⚠ Noyau saturant ! B ≥ Bsat — l\'inductance s\'effondre',
+    freq_warn:'⚠ Fréquence au-dessus de la limite recommandée pour ce matériau',
+    dc_warn:'⚠ Le courant DC peut saturer le noyau',
+    wf_names:{sine:'Sinusoïdale',square:'Carrée',triangle:'Triangulaire',sawtooth:'Dent de scie',dc:'DC'},
+    coiltype_names:{solenoid:'Solénoïde',toroid:'Toroïde',spiral:'Spirale Plane',multilayer:'Multi-couche',pot:'Noyau Pot'},
+  }
+};
+
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.includes(l.toUpperCase().slice(0,2)));
+  });
+  updateLabels();
+  calc(); calcTrafo();
+}
+
+function setId(id, txt) { const el = document.getElementById(id); if (el) el.textContent = txt; }
+function setHtml(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+
+function updateLabels() {
+  const t = T[lang];
+  setId('maintab-inductor', t.tab_ind);
+  setId('maintab-transformer', t.tab_trafo);
+  setId('maintab-learn', t.tab_learn);
+  const ids = ['h_geometry','lbl_coiltype','lbl_turns','lbl_radius','lbl_pitch','lbl_wire','lbl_layers',
+    'h_core','lbl_coretype','lbl_bsat','lbl_gaplen','lbl_coreArea','lbl_corelen',
+    'h_elec','lbl_freq','lbl_voltage','lbl_current','lbl_dcbias','lbl_waveform','lbl_dutycycle',
+    'lbl_temp','lbl_rload','h_results','sect_visual','lbl_coilrender','sect_bh','lbl_bhrender',
+    'lbl_trafomode','lbl_trafoshow','h_primary','lbl_pturns','lbl_pvolt','lbl_pcurr',
+    'lbl_pfreq','lbl_pres','lbl_pradius','h_secondary','lbl_sturns','lbl_sload','lbl_sres',
+    'lbl_coupling','lbl_coretype2','lbl_coildist','lbl_coreArea2','h_trafo_results',
+    'sect_trafo_vis','lbl_traforender','leg_vin','leg_il','leg_flux','leg_vl',
+    'leg_v1','leg_v2','leg_i2','leg_phi','h_theory_ind','h_theory_trafo',
+    'h_formulas','h_effects','h_cores','th_param','th_increase','th_effect',
+    'th_material','th_fmax','th_app'];
+  ids.forEach(k => setId(k.replace(/_/g,'-'), t[k]));
+
+  const theoryInd = document.getElementById('theory-ind-text');
+  if (theoryInd) theoryInd.textContent = t.theory_ind;
+  const theoryTrafo = document.getElementById('theory-trafo-text');
+  if (theoryTrafo) theoryTrafo.textContent = t.theory_trafo;
+
+  // Formulas
+  const formulas = [
+    ['L (solenoide)', 'L = μ₀·μᵣ·N²·Ac / le', 'Ac em m², le em m → L em Henry'],
+    ['L (com gap)', 'L = N² / (le/(μ₀μᵣAc) + g/(μ₀Ac))', 'g = comprimento do entreferro (m)'],
+    ['Reatância', 'XL = 2π·f·L', 'Ω — reatância indutiva'],
+    ['Energia', 'W = ½·L·I²', 'Joules armazenados no campo'],
+    ['FMM', 'F = N·I (Ampère·espira)', 'Força magnetomotriz'],
+    ['Campo H', 'H = N·I / le', 'A/m — intensidade de campo'],
+    ['Fluxo B', 'B = μ₀·μᵣ·H', 'Tesla — densidade de fluxo'],
+    ['Fluxo Φ', 'Φ = B·Ac', 'Weber — fluxo total'],
+    ['Razão trafo', 'a = N₁/N₂ = V₁/V₂ = I₂/I₁', 'Relação de transformação'],
+    ['Ind. mútua', 'M = k·√(L₁·L₂)', 'k = coeficiente de acoplamento'],
+    ['Impedância refletida', 'Z₁\' = a²·ZL', 'Impedância do secundário vista do primário'],
+    ['Fator Q', 'Q = XL / R', 'Qualidade do indutor (sem perdas → ∞)'],
+    ['Resist. DC', 'R = ρ·(N·2πr) / (π·(d/2)²)', 'ρ para Cu ≈ 1.72×10⁻⁸ Ω·m'],
+    ['Self-ressonância', 'fr = 1/(2π·√(L·Cp))', 'Cp = capacitância parasita'],
+  ];
+  setHtml('formulas-grid', formulas.map(([name, formula, desc]) =>
+    `<div class="formula-card"><strong>${name}</strong><code>${formula}</code><p>${desc}</p></div>`
+  ).join(''));
+
+  // Effects table
+  const eff = t.effects || [];
+  setHtml('effects-body', eff.map(([param, change, effect]) =>
+    `<tr><td>${param}</td><td class="up">${change}</td><td>${effect}</td></tr>`
+  ).join(''));
+
+  // Core table
+  const coreRows = Object.entries(CORE_DATA).filter(([k]) => k !== 'custom').map(([k, d]) => {
+    const fStr = d.fmax >= 1e9 ? (d.fmax/1e9).toFixed(0)+'GHz' :
+                 d.fmax >= 1e6 ? (d.fmax/1e6).toFixed(1)+'MHz' :
+                 d.fmax >= 1e3 ? (d.fmax/1e3).toFixed(0)+'kHz' : d.fmax+'Hz';
+    return `<tr><td>${k.charAt(0).toUpperCase()+k.slice(1)}</td><td>${d.mu_r}</td><td>${d.bsat}</td><td>${fStr}</td><td>${d.app[lang]||d.app.pt}</td></tr>`;
+  });
+  setHtml('cores-body', coreRows.join(''));
+}
+
+function setTab(tab) {
+  document.querySelectorAll('.main-tab').forEach((b,i) => b.classList.toggle('active', ['inductor','transformer','learn'][i] === tab));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-'+tab));
+  if (tab === 'inductor') calc();
+  if (tab === 'transformer') calcTrafo();
+}
+
+function gv(id) { return parseFloat(document.getElementById(id).value) || 0; }
+function so(id, val) { const el = document.getElementById(id); if(el) el.textContent = val; }
+
+function fmtFreq(logVal) {
+  const f = Math.pow(10, logVal);
+  if (f >= 1e6) return (f/1e6).toFixed(3) + ' MHz';
+  if (f >= 1e3) return (f/1e3).toFixed(2) + ' kHz';
+  return f.toFixed(1) + ' Hz';
+}
+function getFreq(id) { return Math.pow(10, gv(id)); }
+
+function fmtEng(val, unit, dec) {
+  const a = Math.abs(val);
+  if (!isFinite(val) || isNaN(val)) return '—';
+  if (a === 0) return '0 ' + unit;
+  if (a >= 1e9)  return (val/1e9).toFixed(dec||3) + ' G' + unit;
+  if (a >= 1e6)  return (val/1e6).toFixed(dec||3) + ' M' + unit;
+  if (a >= 1e3)  return (val/1e3).toFixed(dec||3) + ' k' + unit;
+  if (a >= 1)    return val.toFixed(dec||4) + ' ' + unit;
+  if (a >= 1e-3) return (val*1e3).toFixed(dec||3) + ' m' + unit;
+  if (a >= 1e-6) return (val*1e6).toFixed(dec||3) + ' μ' + unit;
+  if (a >= 1e-9) return (val*1e9).toFixed(dec||3) + ' n' + unit;
+  return (val*1e12).toFixed(dec||3) + ' p' + unit;
+}
+
+function calcInductance(N, Ac_m2, le_m, mu_r, gap_m) {
+  const Rcore = le_m > 0 ? le_m / (MU0 * mu_r * Ac_m2) : 1e12;
+  const Rgap  = gap_m > 0 ? gap_m / (MU0 * Ac_m2) : 0;
+  return (Rcore + Rgap) > 0 ? N * N / (Rcore + Rgap) : 0;
+}
+
+function calcDCRes(N, r_m, wireDiam_m, temp) {
+  const rho25 = 1.72e-8;
+  const rho = rho25 * (1 + 0.00393 * (temp - 25));
+  const wireArea = Math.PI * (wireDiam_m / 2) ** 2;
+  const totalLen = N * 2 * Math.PI * r_m;
+  return wireArea > 0 ? rho * totalLen / wireArea : 0;
+}
+
+function coreChanged() {
+  const sel = document.getElementById('coreType').value;
+  document.getElementById('customMu-wrap').style.display = sel === 'custom' ? 'block' : 'none';
+  document.getElementById('customBsat-wrap').style.display = sel === 'custom' ? 'block' : 'none';
+  calc();
+}
+
+function calc() {
+  const t = T[lang];
+  const N = gv('turns');        so('turns-out', N);
+  const r = gv('radius');       so('radius-out', r.toFixed(1) + ' mm');
+  const p = gv('pitch');        so('pitch-out', p.toFixed(1) + ' mm');
+  const wd = gv('wireDiam');    so('wireDiam-out', wd.toFixed(2) + ' mm');
+  const numLayers = gv('layers'); so('layers-out', numLayers);
+  const freqLog = gv('freq');   so('freq-out', fmtFreq(freqLog));
+  const f = getFreq('freq');
+  const V = gv('voltage');      so('voltage-out', V + ' V');
+  const I = gv('current');      so('current-out', I.toFixed(3) + ' A');
+  const dcBias = gv('dcBias');  so('dcBias-out', dcBias.toFixed(1) + ' A');
+  const dc = gv('dutyCycle');   so('dutyCycle-out', dc + '%');
+  const temp = gv('temp');      so('temp-out', temp + ' °C');
+  const RL = gv('rLoad');       so('rLoad-out', RL + ' Ω');
+  const gapMm = gv('gapLen');   so('gapLen-out', gapMm.toFixed(2) + ' mm');
+  const acCm2 = gv('coreArea'); so('coreArea-out', acCm2.toFixed(2) + ' cm²');
+  const leM = gv('corelen');    so('corelen-out', leM + ' mm');
+  const coreTypeSel = document.getElementById('coreType').value;
+  const coreData = CORE_DATA[coreTypeSel] || CORE_DATA.air;
+  let mu_r = coreData.mu_r;
+  let bsat = coreData.bsat;
+  if (coreTypeSel === 'custom') {
+    mu_r = parseFloat(document.getElementById('customMu').value) || 100;
+    bsat = parseFloat(document.getElementById('customBsat').value) || 1.0;
+  }
+  const r_m = r / 1000;
+  const Ac_m2 = acCm2 * 1e-4;
+  const le_m = leM / 1000;
+  const gap_m = gapMm / 1000;
+  const wd_m = wd / 1000;
+
+  // Inductance with multi-layer correction factor
+  const layerFactor = numLayers > 1 ? 1 / (1 + 0.9 * (numLayers - 1) * wd_m / (2 * r_m)) : 1;
+  const L = calcInductance(N, Ac_m2, le_m, mu_r, gap_m) * layerFactor;
+  const XL = 2 * Math.PI * f * L;
+  const Itotal = I + dcBias;
+  const W = 0.5 * L * Itotal ** 2;
+  const MMF = N * Itotal;
+  const H_val = le_m > 0 ? MMF / le_m : 0;
+  const B = MU0 * mu_r * H_val;
+  const flux = B * Ac_m2;
+  const Rdc = calcDCRes(N, r_m, wd_m, temp);
+  const Z = Math.sqrt(XL ** 2 + Rdc ** 2);
+  const Q = Rdc > 0 ? XL / Rdc : 9999;
+  const Vc = Itotal * Rdc;
+
+  // Effective mu with gap
+  const mu_eff = L * le_m / (MU0 * N * N * Ac_m2);
+
+  const mn = t.metrics;
+  document.getElementById('metrics-ind').innerHTML = [
+    [mn.L,    fmtEng(L,'H'),      '',true],
+    [mn.XL,   fmtEng(XL,'Ω'),     ''],
+    [mn.W,    fmtEng(W,'J'),       ''],
+    [mn.B,    B.toFixed(5)+' T',   '', B >= bsat*0.9],
+    [mn.H,    H_val.toFixed(1),    'A/m'],
+    [mn.Q,    Q.toFixed(1),        ''],
+    [mn.Rdc,  fmtEng(Rdc,'Ω'),    ''],
+    [mn.Z,    fmtEng(Z,'Ω'),      ''],
+    [mn.flux, fmtEng(flux,'Wb'),   ''],
+    [mn.Vc,   Vc.toFixed(3)+' V', '', Vc > V*0.1],
+  ].map(([label, val, unit, warn]) =>
+    `<div class="metric-card${warn?' highlight':''}">
+      <div class="m-label">${label}</div>
+      <div class="m-value">${val.split(' ')[0]}</div>
+      <div class="m-unit">${unit || val.split(' ').slice(1).join(' ')}</div>
+    </div>`
+  ).join('');
+
+  let deltaHTML = '';
+  const curr = {L, XL, B, H:H_val, Q, Rdc};
+  if (Object.keys(prevInd).length > 0) {
+    const changes = [];
+    Object.entries(curr).forEach(([k, v]) => {
+      const prev = prevInd[k];
+      if (prev && Math.abs(v - prev) / Math.max(Math.abs(prev), 1e-40) > 0.005) {
+        const pct = ((v - prev) / Math.abs(prev) * 100);
+        const units = {L:'H', XL:'Ω', B:'T', H:'A/m', Q:'', Rdc:'Ω'};
+        changes.push(`<b>${k}</b>: ${fmtEng(prev, units[k])} → ${fmtEng(v, units[k])} <span class="${pct>0?'up':'down'}">(${pct>0?'+':''}${pct.toFixed(1)}%)</span>`);
+      }
+    });
+    if (changes.length) deltaHTML = `<div class="delta-box">📊 ${changes.join('&emsp;')}</div>`;
+  }
+  if (B >= bsat) deltaHTML += `<div class="delta-box danger">${t.saturation}</div>`;
+  if (f > coreData.fmax) deltaHTML += `<div class="delta-box warn">${t.freq_warn}</div>`;
+  if (dcBias > 0 && B > bsat * 0.7) deltaHTML += `<div class="delta-box warn">${t.dc_warn}</div>`;
+  document.getElementById('delta-ind').innerHTML = deltaHTML;
+  prevInd = curr;
+
+  const coilType = document.getElementById('coilType').value;
+  const wf = document.getElementById('waveform').value;
+  drawCoil('coilCanvas', coilType, N, r, p, wd, numLayers, gapMm > 0, coreTypeSel);
+  drawWaveform('waveCanvas', f, V, L, Rdc, I, flux, wf, dc);
+  drawBH('bhCanvas', B, H_val, mu_r, bsat, coreTypeSel);
+}
+
+function calcTrafo() {
+  const t = T[lang];
+  const N1 = gv('pTurns');    so('pTurns-out', N1);
+  const V1 = gv('pVolt');     so('pVolt-out', V1 + ' V');
+  const I1 = gv('pCurr');     so('pCurr-out', I1.toFixed(3) + ' A');
+  const freqLog = gv('pFreq');so('pFreq-out', fmtFreq(freqLog));
+  const f = getFreq('pFreq');
+  const R1 = gv('pRes');      so('pRes-out', R1.toFixed(3) + ' Ω');
+  const r1 = gv('pRadius');   so('pRadius-out', r1 + ' mm');
+  const N2 = gv('sTurns');    so('sTurns-out', N2);
+  const RL = gv('sLoad');     so('sLoad-out', RL + ' Ω');
+  const R2 = gv('sRes');      so('sRes-out', R2.toFixed(3) + ' Ω');
+  const k  = gv('coupling');  so('coupling-out', k.toFixed(2));
+  const dist = gv('coilDist');so('coilDist-out', dist + ' mm');
+  const acCm2 = gv('coreArea2'); so('coreArea2-out', acCm2.toFixed(2) + ' cm²');
+  const coreTypeSel2 = document.getElementById('coreType2').value;
+  const mu_r = CORE_DATA[coreTypeSel2].mu_r;
+
+  const le_m = 0.15, Ac_m2 = acCm2 * 1e-4, gap_m = 0;
+  const L1 = calcInductance(N1, Ac_m2, le_m, mu_r, gap_m);
+  const L2 = calcInductance(N2, Ac_m2, le_m, mu_r, gap_m);
+  const M  = k * Math.sqrt(L1 * L2);
+  const XL1 = 2 * Math.PI * f * L1;
+  const XL2 = 2 * Math.PI * f * L2;
+  const a  = N1 / N2;
+  const V2_ideal = V1 / a;
+  const V2 = V2_ideal * k;
+  const I2 = V2 / (R2 + RL);
+  const V2_terminal = I2 * RL;
+  const P_in = V1 * I1;
+  const P2   = V2_terminal * I2;
+  const eff  = P_in > 0 ? Math.min(P2 / P_in, 1) : 0;
+  const Vdrop = I2 * R2;
+  const Bpk  = mu_r > 0 ? (V1 / (4.44 * f * N1 * Ac_m2 * mu_r * MU0 * (le_m / (MU0 * mu_r * Ac_m2)))) : 0;
+  // Simplified: B = V1 / (4.44 * f * N1 * Ac)
+  const B_trafo = Ac_m2 > 0 ? V1 / (4.44 * f * N1 * Ac_m2) : 0;
+
+  const mn = t.metrics;
+  document.getElementById('metrics-trafo').innerHTML = [
+    [mn.ratio, a.toFixed(3)+':1',         '', true],
+    [mn.V2,    V2_terminal.toFixed(3)+' V',''],
+    [mn.I2,    I2.toFixed(4)+' A',         ''],
+    [mn.P_in,  P_in.toFixed(2)+' W',       ''],
+    [mn.P2,    P2.toFixed(2)+' W',         ''],
+    [mn.eff,   (eff*100).toFixed(2)+'%',   '', eff > 0.9],
+    [mn.M,     fmtEng(M,'H'),             ''],
+    ['L₁',     fmtEng(L1,'H'),            ''],
+    ['L₂',     fmtEng(L2,'H'),            ''],
+    [mn.Vdrop, Vdrop.toFixed(3)+' V',     ''],
+    [mn.Btrafo,B_trafo.toFixed(4)+' T',   ''],
+  ].map(([label, val, unit, hi]) =>
+    `<div class="metric-card${hi?' highlight':''}">
+      <div class="m-label">${label}</div>
+      <div class="m-value">${val.split(' ')[0]}</div>
+      <div class="m-unit">${unit || val.split(' ').slice(1).join(' ')}</div>
+    </div>`
+  ).join('');
+
+  let deltaHTML = '';
+  const curr = {V2: V2_terminal, I2, eff: eff*100, M, L1, L2};
+  if (Object.keys(prevTrafo).length > 0) {
+    const changes = [];
+    Object.entries(curr).forEach(([k2, v]) => {
+      const prev = prevTrafo[k2];
+      if (prev && Math.abs(v - prev) / Math.max(Math.abs(prev), 1e-40) > 0.005) {
+        const pct = ((v - prev) / Math.abs(prev) * 100);
+        const units = {V2:'V', I2:'A', eff:'%', M:'H', L1:'H', L2:'H'};
+        changes.push(`<b>${k2}</b>: ${fmtEng(prev,units[k2])} → ${fmtEng(v,units[k2])} <span class="${pct>0?'up':'down'}">(${pct>0?'+':''}${pct.toFixed(1)}%)</span>`);
+      }
+    });
+    if (changes.length) deltaHTML = `<div class="delta-box">📊 ${changes.join('&emsp;')}</div>`;
+  }
+  document.getElementById('delta-trafo').innerHTML = deltaHTML;
+  prevTrafo = curr;
+
+  drawTransformer('trafoCanvas', N1, N2, r1, dist, k);
+  drawTrafoWaveform('trafoWaveCanvas', f, V1, V2_terminal, I2);
+}
+
+// ===================== CANVAS DRAW FUNCTIONS =====================
+
+function isDark() {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+function getTextColor(alpha) {
+  return isDark() ? `rgba(255,255,255,${alpha})` : `rgba(0,0,0,${alpha})`;
+}
+function setupCanvas(id) {
+  const canvas = document.getElementById(id);
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width || 600;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  return { canvas, ctx, W: canvas.width, H: canvas.height };
+}
+
+function drawGrid(ctx, W, H) {
+  ctx.strokeStyle = isDark() ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  ctx.lineWidth = 0.5;
+  for (let x = 0; x <= W; x += W/8) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y = 0; y <= H; y += H/5) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+}
+
+function drawCoil(canvasId, type, N, r, pitch, wd, numLayers, hasGap, coreType) {
+  const { canvas, ctx, W, H } = setupCanvas(canvasId);
+  const dark = isDark();
+  const coilColor = '#2a78d6';
+  const coreColor = '#eda100';
+  const bgColor = dark ? '#1e1e1c' : '#ffffff';
+  ctx.fillStyle = bgColor; ctx.fillRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2;
+  const t = T[lang];
+  const typeName = t.coiltype_names[type] || type;
+
+  if (type === 'solenoid') {
+    const maxCoilH = H - 60;
+    const visN = Math.min(N, 28);
+    const step = maxCoilH / visN;
+    const ellRx = Math.min(r * 2, W * 0.28);
+    const ellRy = 10;
+    // Core bars
+    if (coreType !== 'air') {
+      ctx.fillStyle = coreColor + '33';
+      ctx.strokeStyle = coreColor;
+      ctx.lineWidth = 2;
+      const coreW = 16;
+      [cx - ellRx - coreW/2, cx + ellRx - coreW/2].forEach(lx => {
+        ctx.beginPath(); ctx.rect(lx, cy - maxCoilH/2 - 4, coreW, maxCoilH + 8); ctx.fill(); ctx.stroke();
+      });
+    }
+    // Hidden back arcs
+    ctx.strokeStyle = coilColor + '44';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < visN; i++) {
+      const y = cy - maxCoilH/2 + i * step;
+      ctx.beginPath(); ctx.ellipse(cx, y, ellRx, ellRy, 0, 0, Math.PI, true); ctx.stroke();
+    }
+    // Front arcs
+    ctx.strokeStyle = coilColor;
+    for (let i = 0; i < visN; i++) {
+      const y = cy - maxCoilH/2 + i * step;
+      ctx.beginPath(); ctx.ellipse(cx, y, ellRx, ellRy, 0, 0, Math.PI); ctx.stroke();
+    }
+    // Lead wires
+    ctx.beginPath(); ctx.strokeStyle = coilColor; ctx.lineWidth = 2;
+    ctx.moveTo(cx - ellRx, cy - maxCoilH/2); ctx.lineTo(cx - ellRx, cy - maxCoilH/2 - 18); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - ellRx, cy + maxCoilH/2 - step); ctx.lineTo(cx - ellRx, cy + maxCoilH/2 + 18); ctx.stroke();
+    if (hasGap) {
+      ctx.setLineDash([5,4]); ctx.strokeStyle = '#e24b4a'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(cx - ellRx - 14, cy); ctx.lineTo(cx + ellRx + 14, cy); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#e24b4a'; ctx.font = '11px system-ui';
+      ctx.fillText('gap', cx + ellRx + 16, cy + 4);
+    }
+  } else if (type === 'toroid') {
+    const outerR = Math.min(r * 2.2, Math.min(W, H) * 0.38);
+    const innerR = outerR * 0.52;
+    ctx.strokeStyle = coreColor; ctx.lineWidth = outerR - innerR;
+    ctx.beginPath(); ctx.arc(cx, cy, (outerR+innerR)/2, 0, Math.PI*2); ctx.stroke();
+    const visN = Math.min(N, 32);
+    ctx.strokeStyle = coilColor; ctx.lineWidth = 2.5;
+    for (let i = 0; i < visN; i++) {
+      const a = (i / visN) * Math.PI * 2 - Math.PI/2;
+      const mx = cx + Math.cos(a) * (outerR + innerR) / 2;
+      const my = cy + Math.sin(a) * (outerR + innerR) / 2;
+      ctx.beginPath(); ctx.arc(mx, my, (outerR-innerR)*0.35, 0, Math.PI*2); ctx.stroke();
+    }
+  } else if (type === 'spiral') {
+    const maxR = Math.min(r * 2.5, Math.min(W,H)*0.42);
+    const visN = Math.min(N, 10);
+    ctx.beginPath(); ctx.strokeStyle = coilColor; ctx.lineWidth = 2;
+    const pts = 500;
+    for (let i = 0; i <= pts; i++) {
+      const a = (i / pts) * visN * Math.PI * 2;
+      const rad = 5 + (maxR - 5) * (i / pts);
+      const x = cx + Math.cos(a) * rad;
+      const y = cy + Math.sin(a) * rad;
+      i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.fillStyle = getTextColor(0.4); ctx.font = '11px system-ui'; ctx.textAlign='center';
+    ctx.fillText('Espiral plana / Flat spiral', cx, H - 10);
+  } else if (type === 'multilayer') {
+    const layH = Math.min(r * 2.5, H - 60);
+    const layW = wd * 3.5;
+    const numL = Math.min(numLayers, 8);
+    const turnsPerL = Math.min(Math.ceil(N / numL), 30);
+    const ts = turnsPerL > 1 ? layH / (turnsPerL - 1) : layH;
+    const startX = cx - (numL - 1) * (layW + 4) / 2;
+    for (let l = 0; l < numL; l++) {
+      const lx = startX + l * (layW + 4);
+      if (coreType !== 'air') {
+        ctx.fillStyle = coreColor + '22'; ctx.strokeStyle = coreColor; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.rect(lx - 2, cy - layH/2 - 2, layW + 4, layH + 4); ctx.fill(); ctx.stroke();
+      }
+      ctx.strokeStyle = coilColor; ctx.lineWidth = 1.8;
+      for (let i = 0; i < turnsPerL; i++) {
+        const y = cy - layH/2 + i * ts;
+        ctx.beginPath(); ctx.moveTo(lx, y); ctx.lineTo(lx + layW, y); ctx.stroke();
+      }
+    }
+  } else if (type === 'pot') {
+    const pr = Math.min(r * 2.2, W * 0.32);
+    const ph = Math.min(r * 1.6, H - 60);
+    ctx.strokeStyle = coreColor; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.rect(cx - pr, cy - ph/2, pr*2, ph); ctx.stroke();
+    ctx.beginPath(); ctx.rect(cx - pr, cy - ph/2, pr*0.22, ph); ctx.stroke();
+    ctx.beginPath(); ctx.rect(cx + pr - pr*0.22, cy - ph/2, pr*0.22, ph); ctx.stroke();
+    ctx.beginPath(); ctx.rect(cx - pr, cy - ph/2, pr*2, ph*0.12); ctx.stroke();
+    ctx.beginPath(); ctx.rect(cx - pr, cy + ph/2 - ph*0.12, pr*2, ph*0.12); ctx.stroke();
+    const visN = Math.min(N, 14);
+    const ts2 = (ph * 0.76) / Math.max(visN,1);
+    ctx.strokeStyle = coilColor; ctx.lineWidth = 2;
+    for (let i = 0; i < visN; i++) {
+      const y = cy - ph/2 + ph*0.12 + i * ts2 + ts2/2;
+      ctx.beginPath(); ctx.arc(cx, y, pr * 0.45, 0, Math.PI*2); ctx.stroke();
+    }
+  }
+
+  ctx.fillStyle = getTextColor(0.5); ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'left';
+  ctx.fillText(`${typeName} | N=${N} | r=${r}mm | p=${pitch}mm`, 8, H - 10);
+}
+
+function drawWaveform(canvasId, f, V, L, R, Ipk, flux, wf, dc) {
+  const { canvas, ctx, W, H } = setupCanvas(canvasId);
+  const dark = isDark();
+  ctx.fillStyle = dark ? '#1e1e1c' : '#fff'; ctx.fillRect(0,0,W,H);
+  drawGrid(ctx, W, H);
+  ctx.strokeStyle = getTextColor(0.25); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, H/2); ctx.lineTo(W, H/2); ctx.stroke();
+
+  const XL = 2 * Math.PI * f * L;
+  const Z = Math.sqrt(XL**2 + R**2);
+  const phi = Math.atan2(XL, R);
+  const pts = 400;
+  const dcp = dc / 100;
+
+  const wfFn = (t2, phase) => {
+    const x = t2 * Math.PI * 2 + phase;
+    if (wf === 'sine') return Math.sin(x);
+    if (wf === 'square') return (((x % (Math.PI*2)) / (Math.PI*2)) < dcp ? 1 : -1);
+    if (wf === 'triangle') return 2 / Math.PI * Math.asin(Math.sin(x));
+    if (wf === 'sawtooth') return 2 * ((x / (Math.PI*2)) % 1) - 1;
+    return 0.6;
+  };
+
+  const pad = 24;
+  const drawSig = (color, dashed, dotted, ampFn, phase) => {
+    ctx.strokeStyle = color; ctx.lineWidth = 1.8;
+    if (dashed) ctx.setLineDash([6,4]);
+    else if (dotted) ctx.setLineDash([2,3]);
+    else ctx.setLineDash([]);
+    ctx.beginPath();
+    for (let i = 0; i <= pts; i++) {
+      const t2 = i / pts;
+      const x = pad + t2 * (W - 2*pad);
+      const y = H/2 - ampFn(t2, phase) * (H/2 - 14);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+  };
+
+  const fluxAmp = Math.min(Math.abs(flux) * 1e4 / Math.max(Math.abs(flux)*1e4, 0.001), 1);
+  drawSig('#eda100', false, false, (t2) => fluxAmp * wfFn(t2, Math.PI/2), 0);
+  drawSig('#e24b4a', false, true,  (t2) => {
+    const v = wfFn(t2, 0);
+    const dv = wfFn(t2 + 0.002, 0) - v;
+    return dv * 8;
+  }, 0);
+  drawSig('#1baf7a', true, false,  (t2) => wfFn(t2, -phi) * (Z > 0 ? XL/Z : 0.8), 0);
+  drawSig('#2a78d6', false, false, (t2) => wfFn(t2, 0), 0);
+
+  ctx.fillStyle = getTextColor(0.55); ctx.font = '11px system-ui'; ctx.textAlign = 'left';
+  ctx.fillText(`f=${fmtFreq(Math.log10(f))}  L=${fmtEng(L,'H')}  XL=${fmtEng(XL,'Ω')}  Q=${R>0?(XL/R).toFixed(1):'∞'}`, 8, 14);
+  ctx.fillText('2 ciclos', W - 55, H - 6);
+}
+
+function drawBH(canvasId, B_op, H_op, mu_r, bsat, coreType) {
+  const { canvas, ctx, W, H } = setupCanvas(canvasId);
+  const dark = isDark();
+  ctx.fillStyle = dark ? '#1e1e1c' : '#fff'; ctx.fillRect(0,0,W,H);
+  const pad = { top: 20, right: 20, bottom: 32, left: 44 };
+  const iW = W - pad.left - pad.right;
+  const iH = H - pad.top - pad.bottom;
+
+  const hMax = Math.max(H_op * 2.5, 1000, 500);
+  const bMax = bsat * 1.25;
+
+  // Grid
+  ctx.strokeStyle = isDark() ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'; ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 5; i++) {
+    const x = pad.left + i * iW / 5;
+    const y = pad.top + i * iH / 5;
+    ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, pad.top+iH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left+iW, y); ctx.stroke();
+  }
+
+  const toX = h => pad.left + (h / hMax) * iW;
+  const toY = b => pad.top + iH - (b / bMax) * iH;
+
+  // Bsat dashed line
+  ctx.setLineDash([6,4]); ctx.strokeStyle = '#e24b4a'; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(pad.left, toY(bsat)); ctx.lineTo(pad.left+iW, toY(bsat)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#e24b4a'; ctx.font = '10px system-ui'; ctx.textAlign = 'left';
+  ctx.fillText(`Bsat=${bsat}T`, pad.left + 4, toY(bsat) - 4);
+
+  // B-H curve
+  ctx.beginPath(); ctx.strokeStyle = '#2a78d6'; ctx.lineWidth = 2.5;
+  const steps = 300;
+  for (let i = 0; i <= steps; i++) {
+    const h = (i / steps) * hMax;
+    const b = bsat * Math.tanh(MU0 * mu_r * h / bsat);
+    const x = toX(h); const y = toY(b);
+    i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+
+  // Operating point
+  const B_clamped = Math.min(B_op, bsat * 0.999);
+  const ox = toX(H_op); const oy = toY(B_clamped);
+  ctx.beginPath(); ctx.arc(ox, oy, 7, 0, Math.PI*2);
+  ctx.fillStyle = B_op >= bsat ? '#e24b4a' : '#1baf7a'; ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = getTextColor(0.75); ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'left';
+  ctx.fillText(`B=${B_clamped.toFixed(3)}T  H=${H_op.toFixed(0)}A/m`, ox+10, oy-6);
+
+  // Axes labels
+  ctx.fillStyle = getTextColor(0.5); ctx.font = '11px system-ui'; ctx.textAlign = 'right';
+  ctx.fillText('B (T)', pad.left - 4, pad.top + 8);
+  ctx.textAlign = 'right';
+  ctx.fillText('H (A/m)', pad.left + iW, pad.top + iH + 28);
+  // Axis values
+  for (let i = 0; i <= 4; i++) {
+    const b = bMax * (1 - i/4);
+    ctx.fillText(b.toFixed(2), pad.left - 4, toY(b) + 4);
+    const h = hMax * i/4;
+    ctx.textAlign = 'center';
+    ctx.fillText(Math.round(h).toLocaleString(), toX(h), pad.top + iH + 16);
+    ctx.textAlign = 'right';
+  }
+}
+
+function drawTransformer(canvasId, N1, N2, r1, dist, k) {
+  const { canvas, ctx, W, H } = setupCanvas(canvasId);
+  const dark = isDark();
+  ctx.fillStyle = dark ? '#1e1e1c' : '#fff'; ctx.fillRect(0,0,W,H);
+  const cx = W/2, cy = H/2;
+  const coreW = Math.max(dist * 2.5 + 30, 40);
+  const coreH = H - 60;
+  const coilW = 22;
+
+  // Core
+  ctx.strokeStyle = '#eda100'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.rect(cx - coreW/2, cy - coreH/2, coreW, coreH); ctx.stroke();
+  ctx.fillStyle = '#eda100' + '18'; ctx.fillRect(cx - coreW/2, cy - coreH/2, coreW, coreH);
+
+  // Primary winding (left)
+  const visN1 = Math.min(N1, 20);
+  const t1step = (coreH - 20) / Math.max(visN1, 1);
+  ctx.strokeStyle = '#2a78d6'; ctx.lineWidth = 2;
+  for (let i = 0; i < visN1; i++) {
+    const y = cy - coreH/2 + 10 + i * t1step + t1step/2;
+    ctx.beginPath(); ctx.arc(cx - coreW/2 - coilW/2, y, coilW/2, 0, Math.PI*2); ctx.stroke();
+  }
+
+  // Secondary winding (right)
+  const visN2 = Math.min(N2, 20);
+  const t2step = (coreH - 20) / Math.max(visN2, 1);
+  ctx.strokeStyle = '#1baf7a'; ctx.lineWidth = 2;
+  for (let i = 0; i < visN2; i++) {
+    const y = cy - coreH/2 + 10 + i * t2step + t2step/2;
+    ctx.beginPath(); ctx.arc(cx + coreW/2 + coilW/2, y, coilW/2, 0, Math.PI*2); ctx.stroke();
+  }
+
+  // Lead wires
+  ctx.strokeStyle = '#2a78d6'; ctx.lineWidth = 1.5;
+  const x1 = cx - coreW/2 - coilW;
+  ctx.beginPath(); ctx.moveTo(x1, cy - coreH/2 + 10); ctx.lineTo(20, cy - coreH/2 + 10); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x1, cy + coreH/2 - 10); ctx.lineTo(20, cy + coreH/2 - 10); ctx.stroke();
+  ctx.strokeStyle = '#1baf7a';
+  const x2 = cx + coreW/2 + coilW;
+  ctx.beginPath(); ctx.moveTo(x2, cy - coreH/2 + 10); ctx.lineTo(W-20, cy - coreH/2 + 10); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x2, cy + coreH/2 - 10); ctx.lineTo(W-20, cy + coreH/2 - 10); ctx.stroke();
+
+  // Coupling flux arrow
+  ctx.strokeStyle = '#eda100' + '88'; ctx.lineWidth = 1; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(cx - coreW/2 - coilW, cy); ctx.lineTo(cx + coreW/2 + coilW, cy); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Labels
+  ctx.fillStyle = getTextColor(0.65); ctx.font = 'bold 12px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#2a78d6'; ctx.fillText(`N₁=${N1}`, cx - coreW/2 - coilW/2, cy - coreH/2 - 8);
+  ctx.fillStyle = '#1baf7a'; ctx.fillText(`N₂=${N2}`, cx + coreW/2 + coilW/2, cy - coreH/2 - 8);
+  ctx.fillStyle = '#eda100'; ctx.fillText(`k=${k.toFixed(2)}`, cx, cy + coreH/2 + 22);
+  ctx.fillStyle = getTextColor(0.4); ctx.font = '11px system-ui';
+  ctx.fillText(`Φ`, cx, cy - 5);
+}
+
+function drawTrafoWaveform(canvasId, f, V1, V2, I2) {
+  const { canvas, ctx, W, H } = setupCanvas(canvasId);
+  const dark = isDark();
+  ctx.fillStyle = dark ? '#1e1e1c' : '#fff'; ctx.fillRect(0,0,W,H);
+  drawGrid(ctx, W, H);
+  ctx.strokeStyle = getTextColor(0.25); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, H/2); ctx.lineTo(W, H/2); ctx.stroke();
+
+  const maxV = Math.max(V1, V2, 0.001);
+  const pts = 400;
+  const pad = 24;
+  const drawSig = (color, dashed, dotted, fn) => {
+    ctx.strokeStyle = color; ctx.lineWidth = 2;
+    if (dashed) ctx.setLineDash([6,4]);
+    else if (dotted) ctx.setLineDash([2,3]);
+    else ctx.setLineDash([]);
+    ctx.beginPath();
+    for (let i = 0; i <= pts; i++) {
+      const t2 = i / pts;
+      const x = pad + t2 * (W - 2*pad);
+      const y = H/2 - fn(t2) * (H/2 - 14);
+      i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+  };
+
+  const a = V1 > 0 ? V2/V1 : 1;
+  drawSig('#e24b4a', false, true,  t2 => -Math.sin(t2 * Math.PI * 4 + 0.3) * 0.45); // flux
+  drawSig('#eda100', true,  false, t2 => Math.sin(t2 * Math.PI * 4 - Math.PI/6) * Math.min(I2 * maxV / Math.max(I2*maxV,0.001), 0.9));
+  drawSig('#1baf7a', false, false, t2 => Math.sin(t2 * Math.PI * 4) * Math.min(V2/maxV, 1));
+  drawSig('#2a78d6', false, false, t2 => Math.sin(t2 * Math.PI * 4) * (V1/maxV));
+
+  ctx.fillStyle = getTextColor(0.55); ctx.font = '11px system-ui'; ctx.textAlign = 'left';
+  ctx.fillText(`V₁=${V1.toFixed(1)}V  V₂=${V2.toFixed(1)}V  I₂=${I2.toFixed(3)}A  f=${fmtFreq(Math.log10(f))}  a=${V1>0?(V1/Math.max(V2,0.001)).toFixed(2):'—'}`, 8, 14);
+}
+
+// Init
+updateLabels();
+setTimeout(() => { calc(); calcTrafo(); }, 100);
+window.addEventListener('resize', () => { calc(); calcTrafo(); });
+</script>
+</body>
+</html>
