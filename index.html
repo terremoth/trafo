@@ -258,35 +258,35 @@
         <div class="field">
           <label id="lbl-turns">Número de espiras (N)</label>
           <div class="range-row">
-            <input type="range" id="turns" min="1" max="1000" value="50" step="1" oninput="calc()">
+            <input type="number" id="turns" min="1" max="1000" value="50" step="1" oninput="calc()">
             <span class="range-val" id="turns-out">50</span>
           </div>
         </div>
         <div class="field">
           <label id="lbl-radius">Raio da espira (r) — mm</label>
           <div class="range-row">
-            <input type="range" id="radius" min="1" max="150" value="15" step="0.5" oninput="calc()">
+            <input type="number" id="radius" min="1" max="150" value="15" step="0.5" oninput="calc()">
             <span class="range-val" id="radius-out">15.0 mm</span>
           </div>
         </div>
         <div class="field">
           <label id="lbl-pitch">Distância entre espiras (p) — mm</label>
           <div class="range-row">
-            <input type="range" id="pitch" min="0.1" max="15" value="1.0" step="0.1" oninput="calc()">
+            <input type="number" id="pitch" min="0.1" max="15" value="1.0" step="0.1" oninput="calc()">
             <span class="range-val" id="pitch-out">1.0 mm</span>
           </div>
         </div>
         <div class="field">
           <label id="lbl-wire">Diâmetro do fio (d) — mm</label>
           <div class="range-row">
-            <input type="range" id="wireDiam" min="0.05" max="6" value="0.5" step="0.05" oninput="calc()">
+            <input type="number" id="wireDiam" min="0.05" max="6" value="0.5" step="0.05" oninput="calc()">
             <span class="range-val" id="wireDiam-out">0.50 mm</span>
           </div>
         </div>
         <div class="field">
           <label id="lbl-layers">Número de camadas</label>
           <div class="range-row">
-            <input type="range" id="layers" min="1" max="20" value="1" step="1" oninput="calc()">
+            <input type="number" id="layers" min="1" max="20" value="1" step="1" oninput="calc()">
             <span class="range-val" id="layers-out">1</span>
           </div>
         </div>
@@ -318,21 +318,21 @@
         <div class="field">
           <label id="lbl-gaplen">Entreferro / Air gap (g) — mm</label>
           <div class="range-row">
-            <input type="range" id="gapLen" min="0" max="10" value="0" step="0.05" oninput="calc()">
+            <input type="number" id="gapLen" min="0" max="10" value="0" step="0.05" oninput="calc()">
             <span class="range-val" id="gapLen-out">0.00 mm</span>
           </div>
         </div>
         <div class="field">
           <label id="lbl-coreArea">Área da seção transversal (Ac) — cm²</label>
           <div class="range-row">
-            <input type="range" id="coreArea" min="0.05" max="50" value="1.0" step="0.05" oninput="calc()">
+            <input type="number" id="coreArea" min="0.05" max="50" value="1.0" step="0.05" oninput="calc()">
             <span class="range-val" id="coreArea-out">1.00 cm²</span>
           </div>
         </div>
         <div class="field">
           <label id="lbl-corelen">Comprimento do caminho magnético (le) — mm</label>
           <div class="range-row">
-            <input type="range" id="corelen" min="5" max="600" value="100" step="5" oninput="calc()">
+            <input type="number" id="corelen" min="5" max="600" value="100" step="5" oninput="calc()">
             <span class="range-val" id="corelen-out">100 mm</span>
           </div>
         </div>
@@ -345,28 +345,28 @@
         <div class="field">
           <label id="lbl-freq">Frequência de operação (f)</label>
           <div class="range-row">
-            <input type="range" id="freq" min="0" max="7" value="2" step="0.05" oninput="calc()">
+            <input type="number" id="freq" min="0" max="7" value="2" step="0.05" oninput="calc()">
             <span class="range-val" id="freq-out">100 Hz</span>
           </div>
         </div>
         <div class="field">
           <label id="lbl-voltage">Tensão de entrada (Vin) — V</label>
           <div class="range-row">
-            <input type="range" id="voltage" min="1" max="10000" value="120" step="1" oninput="calc()">
+            <input type="number" id="voltage" min="1" max="10000" value="120" step="1" oninput="calc()">
             <span class="range-val" id="voltage-out">120 V</span>
           </div>
         </div>
         <div class="field">
           <label id="lbl-current">Corrente de pico (Ipk) — A</label>
           <div class="range-row">
-            <input type="range" id="current" min="0.001" max="200" value="1.0" step="0.001" oninput="calc()">
+            <input type="number" id="current" min="0.001" max="200" value="1.0" step="0.001" oninput="calc()">
             <span class="range-val" id="current-out">1.000 A</span>
           </div>
         </div>
         <div class="field">
           <label id="lbl-dcbias">Polarização DC (IDC bias) — A</label>
           <div class="range-row">
-            <input type="range" id="dcBias" min="0" max="100" value="0" step="0.1" oninput="calc()">
+            <input type="number" id="dcBias" min="0" max="100" value="0" step="0.1" oninput="calc()">
             <span class="range-val" id="dcBias-out">0.0 A</span>
           </div>
         </div>
@@ -383,21 +383,21 @@
         <div class="field">
           <label id="lbl-dutycycle">Duty cycle (%) — para onda quadrada</label>
           <div class="range-row">
-            <input type="range" id="dutyCycle" min="1" max="99" value="50" step="1" oninput="calc()">
+            <input type="number" id="dutyCycle" min="1" max="99" value="50" step="1" oninput="calc()">
             <span class="range-val" id="dutyCycle-out">50%</span>
           </div>
         </div>
         <div class="field">
           <label id="lbl-temp">Temperatura de operação (°C)</label>
           <div class="range-row">
-            <input type="range" id="temp" min="-40" max="200" value="25" step="5" oninput="calc()">
+            <input type="number" id="temp" min="-40" max="200" value="25" step="5" oninput="calc()">
             <span class="range-val" id="temp-out">25 °C</span>
           </div>
         </div>
         <div class="field">
           <label id="lbl-rload">Carga resistiva (RL) — Ω</label>
           <div class="range-row">
-            <input type="range" id="rLoad" min="0.1" max="10000" value="100" step="0.1" oninput="calc()">
+            <input type="number" id="rLoad" min="0.1" max="10000" value="100" step="0.1" oninput="calc()">
             <span class="range-val" id="rLoad-out">100 Ω</span>
           </div>
         </div>
@@ -454,42 +454,42 @@
       <div class="field">
         <label id="lbl-pturns">Espiras primárias (N₁)</label>
         <div class="range-row">
-          <input type="range" id="pTurns" min="1" max="2000" value="200" step="1" oninput="calcTrafo()">
+          <input type="number" id="pTurns" min="1" max="2000" value="200" step="1" oninput="calcTrafo()">
           <span class="range-val" id="pTurns-out">200</span>
         </div>
       </div>
       <div class="field">
         <label id="lbl-pvolt">Tensão primária (V₁) — V</label>
         <div class="range-row">
-          <input type="range" id="pVolt" min="1" max="100000" value="220" step="1" oninput="calcTrafo()">
+          <input type="number" id="pVolt" min="1" max="100000" value="220" step="1" oninput="calcTrafo()">
           <span class="range-val" id="pVolt-out">220 V</span>
         </div>
       </div>
       <div class="field">
         <label id="lbl-pcurr">Corrente primária (I₁) — A</label>
         <div class="range-row">
-          <input type="range" id="pCurr" min="0.001" max="500" value="1.0" step="0.001" oninput="calcTrafo()">
+          <input type="number" id="pCurr" min="0.001" max="500" value="1.0" step="0.001" oninput="calcTrafo()">
           <span class="range-val" id="pCurr-out">1.000 A</span>
         </div>
       </div>
       <div class="field">
         <label id="lbl-pfreq">Frequência (f) — Hz</label>
         <div class="range-row">
-          <input type="range" id="pFreq" min="0" max="7" value="2.301" step="0.05" oninput="calcTrafo()">
+          <input type="number" id="pFreq" min="0" max="7" value="2.301" step="0.05" oninput="calcTrafo()">
           <span class="range-val" id="pFreq-out">200 Hz</span>
         </div>
       </div>
       <div class="field">
         <label id="lbl-pres">Resistência do enrolamento primário (R₁) — Ω</label>
         <div class="range-row">
-          <input type="range" id="pRes" min="0.001" max="100" value="0.5" step="0.001" oninput="calcTrafo()">
+          <input type="number" id="pRes" min="0.001" max="100" value="0.5" step="0.001" oninput="calcTrafo()">
           <span class="range-val" id="pRes-out">0.500 Ω</span>
         </div>
       </div>
       <div class="field">
         <label id="lbl-pradius">Raio médio — mm</label>
         <div class="range-row">
-          <input type="range" id="pRadius" min="5" max="300" value="50" step="1" oninput="calcTrafo()">
+          <input type="number" id="pRadius" min="5" max="300" value="50" step="1" oninput="calcTrafo()">
           <span class="range-val" id="pRadius-out">50 mm</span>
         </div>
       </div>
@@ -500,28 +500,28 @@
       <div class="field">
         <label id="lbl-sturns">Espiras secundárias (N₂)</label>
         <div class="range-row">
-          <input type="range" id="sTurns" min="1" max="2000" value="100" step="1" oninput="calcTrafo()">
+          <input type="number" id="sTurns" min="1" max="2000" value="100" step="1" oninput="calcTrafo()">
           <span class="range-val" id="sTurns-out">100</span>
         </div>
       </div>
       <div class="field">
         <label id="lbl-sload">Carga resistiva (R_L) — Ω</label>
         <div class="range-row">
-          <input type="range" id="sLoad" min="0.1" max="100000" value="100" step="0.1" oninput="calcTrafo()">
+          <input type="number" id="sLoad" min="0.1" max="100000" value="100" step="0.1" oninput="calcTrafo()">
           <span class="range-val" id="sLoad-out">100 Ω</span>
         </div>
       </div>
       <div class="field">
         <label id="lbl-sres">Resistência do enrolamento (R₂) — Ω</label>
         <div class="range-row">
-          <input type="range" id="sRes" min="0.001" max="100" value="0.3" step="0.001" oninput="calcTrafo()">
+          <input type="number" id="sRes" min="0.001" max="100" value="0.3" step="0.001" oninput="calcTrafo()">
           <span class="range-val" id="sRes-out">0.300 Ω</span>
         </div>
       </div>
       <div class="field">
         <label id="lbl-coupling">Coeficiente de acoplamento (k)</label>
         <div class="range-row">
-          <input type="range" id="coupling" min="0.01" max="1" value="0.98" step="0.01" oninput="calcTrafo()">
+          <input type="number" id="coupling" min="0.01" max="1" value="0.98" step="0.01" oninput="calcTrafo()">
           <span class="range-val" id="coupling-out">0.98</span>
         </div>
       </div>
@@ -538,14 +538,14 @@
       <div class="field">
         <label id="lbl-coildist">Distância entre enrolamentos — mm</label>
         <div class="range-row">
-          <input type="range" id="coilDist" min="0" max="100" value="5" step="1" oninput="calcTrafo()">
+          <input type="number" id="coilDist" min="0" max="100" value="5" step="1" oninput="calcTrafo()">
           <span class="range-val" id="coilDist-out">5 mm</span>
         </div>
       </div>
       <div class="field">
         <label id="lbl-coreArea2">Área da seção transversal (Ac) — cm²</label>
         <div class="range-row">
-          <input type="range" id="coreArea2" min="0.05" max="100" value="5" step="0.05" oninput="calcTrafo()">
+          <input type="number" id="coreArea2" min="0.05" max="100" value="5" step="0.05" oninput="calcTrafo()">
           <span class="range-val" id="coreArea2-out">5.00 cm²</span>
         </div>
       </div>
