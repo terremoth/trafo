@@ -1,4 +1,4 @@
 # Trafo
 Inductor and Trafo designer
 
-Completely vibecoded with Claude Sonnet 5.6 medium
+Completely vibecoded with Claude Sonnet 4.6 medium
